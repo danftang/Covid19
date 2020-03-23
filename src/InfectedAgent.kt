@@ -85,7 +85,7 @@ class InfectedAgent: Agent {
     }
 
     fun becomeSymptomatic(): Boolean {
-        return daysSinceInfection > symptomOnsetTime
+        return !subclinical && daysSinceInfection > symptomOnsetTime
     }
 
 
