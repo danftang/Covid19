@@ -1,2 +1,2 @@
-class Workplace: ArrayList<InfectedAgent>() {
+class Workplace: ArrayList<Agent>() {
 }

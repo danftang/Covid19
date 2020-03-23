@@ -1,54 +1,56 @@
 import java.util.*
 import kotlin.random.Random
 
-class Simulation(val tracingCapacity: Int) {
-    val undetectedCases = HashSet<InfectedAgent>()
-    val detectedCases = ArrayDeque<InfectedAgent>()
-    val pDetectHousehold = 1.0
-    val pDetectWorkplace = 0.8
-
+class Simulation(val pTraceContact: Double) {
+    val detectedCases = ArrayDeque<Agent>()
+    val events = PriorityQueue<Event>()
+    var currentTime = 0.0
+    var lastInfectionTime = 0.0
 
     val nCases: Int
-        get() = undetectedCases.size + detectedCases.size
+        get() = events.size + detectedCases.size
 
     fun step() {
-        val currentCases = undetectedCases.toList()
-        currentCases.forEach { it.step(this) }
-        var dailyTests = 0
-        while(dailyTests++ < tracingCapacity && detectedCases.isNotEmpty()) {
-            contactTrace(detectedCases.pollFirst())
+
+        if(events.isNotEmpty()) {
+            val event = events.poll()
+            while(detectedCases.isNotEmpty()) {
+                contactTrace(detectedCases.pollFirst())
+            }
+            currentTime = event.time
+            val nextEvent = event.agent.processNextEvent(this)
+            if(nextEvent != null) {
+                events.add(nextEvent)
+            }
+        } else {
+            while(detectedCases.isNotEmpty()) {
+                contactTrace(detectedCases.pollFirst())
+            }
         }
     }
 
 
-    fun accessPrimaryCare(agent: InfectedAgent) {
-        undetectedCases.remove(agent)
+    fun accessPrimaryCare(agent: Agent) {
         detectedCases.addLast(agent)
     }
 
 
-    fun addUndetectedCase(agent: InfectedAgent) {
-        undetectedCases.add(agent)
+    fun addUndetectedCase(agent: Agent) {
+        lastInfectionTime = currentTime
+        val firstEvent = agent.peekNextEvent()
+        if(firstEvent != null) events.add(firstEvent)
     }
 
 
-    fun contactTrace(agent: InfectedAgent) {
-        agent.household.forEach { cohabiter ->
-            if(Random.nextDouble() < pDetectHousehold) {
-                quarrantine(cohabiter)
+    fun contactTrace(agent: Agent) {
+        agent.contacts.forEach { contact ->
+            if(Random.nextDouble() < pTraceContact) {
+                if(!contact.isDetected) {
+                    contact.isDetected = true
+                    detectedCases.addLast(contact)
+                }
             }
         }
-        agent.workplace.forEach { colleague ->
-            if(Random.nextDouble() < pDetectWorkplace) {
-                quarrantine(colleague)
-            }
-        }
     }
 
-    fun quarrantine(agent: InfectedAgent) {
-        if(undetectedCases.contains(agent)) {
-            undetectedCases.remove(agent)
-            detectedCases.addLast(agent)
-        }
-    }
 }

@@ -1,7 +1,7 @@
 import kotlin.collections.ArrayList
 import kotlin.random.Random
 
-class Household: ArrayList<InfectedAgent> {
+class Household: ArrayList<Agent> {
     val totalSize: Int
 
     constructor(): super() {

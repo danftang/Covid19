@@ -15,8 +15,10 @@ fun Random.nextNegativeBinomial(r: Double, mu: Double): Int {
 }
 
 
-fun Random.nextWeibull(alpha: Double, beta: Double): Double {
-    return WeibullDistribution(alpha, beta).sample()
+// shape is sometimes called alpha or k
+// scale is sometimes called beta or lambda
+fun Random.nextWeibull(shape: Double, scale: Double): Double {
+    return WeibullDistribution(shape, scale).sample()
 }
 
 
