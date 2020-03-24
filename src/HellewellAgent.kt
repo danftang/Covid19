@@ -15,25 +15,26 @@ class HellewellAgent: Agent {
     override var isDetected = false
 
     constructor(currentTime: Double) {
-        val symptomOnsetTime = incubationTime()
+        val incubationPeriod = incubationTime()
+        val symptomOnsetTime = currentTime + incubationPeriod
         val selfIsolationTime = if(!isSubclinical()) {
-            eventQueue.add(Event(currentTime + symptomOnsetTime, Event.Type.BECOMESYMPTOMATIC, this))
-            val selfIsolationTime = symptomOnsetToSelfIsolation() + symptomOnsetTime
-            eventQueue.add(Event(currentTime + selfIsolationTime, Event.Type.SELFISOLATE, this))
+            eventQueue.add(Event(symptomOnsetTime, Event.Type.BECOMESYMPTOMATIC, this))
+            val selfIsolationTime =  symptomOnsetTime + symptomOnsetToSelfIsolation()
+            eventQueue.add(Event(selfIsolationTime, Event.Type.SELFISOLATE, this))
             selfIsolationTime
         } else {
             Double.POSITIVE_INFINITY
         }
         for(infection in 1..numberOfInfected()) {
-            val transmissionTime = infectionTime(symptomOnsetTime)
+            val transmissionTime = currentTime + infectionTime(incubationPeriod)
             if(transmissionTime < selfIsolationTime) {
-                eventQueue.add(Event(currentTime + transmissionTime, Event.Type.TRANSMIT, this))
+                eventQueue.add(Event(transmissionTime, Event.Type.TRANSMIT, this))
             }
         }
     }
 
     constructor(currentTime: Double, infector: HellewellAgent): this(currentTime) {
-        contacts.add(infector)
+        contacts.add(infector) // Ambiguity whether the infector is classed as a contact
     }
 
     override fun peekNextEvent(): Event? {
@@ -70,12 +71,14 @@ class HellewellAgent: Agent {
     }
 
     fun incubationTime(): Double {
-        return Random.nextWeibull(2.32277, 6.492272)
+        return Random.nextWeibull(2.322737, 6.492272)
     }
 
     fun infectionTime(incubationTime: Double): Double {
         // shape = 30, 1.95, 0.7 for <1%, 15% and 30% before symptom onset respectively
-        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
+//        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
+        val t = Random.nextSkewNormal(1.95, 2.0, incubationTime)
+        return if(t<1.0) 1.0 else t
     }
 
     fun isSubclinical(): Boolean {

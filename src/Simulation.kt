@@ -7,9 +7,6 @@ class Simulation(val pTraceContact: Double) {
     var currentTime = 0.0
     var lastInfectionTime = 0.0
 
-    val nCases: Int
-        get() = events.size + detectedCases.size
-
     fun step() {
 
         if(events.isNotEmpty()) {
@@ -22,7 +19,8 @@ class Simulation(val pTraceContact: Double) {
             if(nextEvent != null) {
                 events.add(nextEvent)
             }
-        } else {
+        }
+        else {
             while(detectedCases.isNotEmpty()) {
                 contactTrace(detectedCases.pollFirst())
             }
@@ -44,11 +42,9 @@ class Simulation(val pTraceContact: Double) {
 
     fun contactTrace(agent: Agent) {
         agent.contacts.forEach { contact ->
-            if(Random.nextDouble() < pTraceContact) {
-                if(!contact.isDetected) {
-                    contact.isDetected = true
-                    detectedCases.addLast(contact)
-                }
+            if(!contact.isDetected && Random.nextDouble() < pTraceContact) {
+                contact.isDetected = true
+                detectedCases.addLast(contact)
             }
         }
     }
