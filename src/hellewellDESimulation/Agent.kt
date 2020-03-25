@@ -1,16 +1,20 @@
+package hellewellDESimulation
+
 import extensions.nextNegativeBinomial
 import extensions.nextSkewNormal
 import extensions.nextWeibull
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.random.Random
 
 // Agent as described in Hellewell et.al., 2020,
 // https://doi.org/10.1016/S2214-109X(20)30074-7
-class HellewellAgent: Agent {
+class Agent {
 
     val eventQueue = PriorityQueue<Event>()
-    override val contacts = ArrayList<HellewellAgent>()
-    override var isDetected = false
+    val contacts = ArrayList<Agent>()
+    var isDetected = false
+    var isSymptomatic = false
 
     constructor(sim: Simulation) {
         val incubationPeriod = incubationTime()
@@ -31,30 +35,36 @@ class HellewellAgent: Agent {
         }
     }
 
-    override fun peekNextEvent(): Event? {
+    fun peekNextEvent(): Event? {
         return if(eventQueue.isEmpty()) null else eventQueue.peek()
     }
 
-    override fun processNextEvent(sim: Simulation): Event? {
+
+    fun processNextEvent(sim: Simulation): Event? {
         val nextEvent = eventQueue.poll()
         return when(nextEvent.type) {
             Event.Type.TRANSMIT -> {
-                val newInfectedAgent = HellewellAgent(sim)
-                contacts.add(newInfectedAgent)
-                sim.addUndetectedCase(newInfectedAgent)
-                peekNextEvent()
+                if(isSymptomatic && isDetected) {
+                    null
+                } else {
+                    val newInfectedAgent = Agent(sim)
+                    contacts.add(newInfectedAgent)
+                    sim.addUndetectedCase(newInfectedAgent)
+                    peekNextEvent()
+                }
             }
             Event.Type.BECOMESYMPTOMATIC -> {
+                isSymptomatic = true
                 if(isDetected) {
                     sim.accessPrimaryCare(this)
-                    null
+                    null // Don't send next event to hellewellDESimulation.main event loop, stops further infection
                 } else {
                     peekNextEvent()
                 }
             }
             Event.Type.SELFISOLATE -> {
                 sim.accessPrimaryCare(this)
-                null
+                null // Don't send next event to hellewellDESimulation.main event loop, stops further infection
             }
         }
     }
@@ -76,7 +86,7 @@ class HellewellAgent: Agent {
     }
 
     fun isSubclinical(sim: Simulation): Boolean {
-        return Random.nextDouble() < sim.pSubclinical
+        return kotlin.random.Random.nextDouble() < sim.pSubclinical
     }
 
     fun symptomOnsetToSelfIsolation(): Double {

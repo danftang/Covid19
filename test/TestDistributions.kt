@@ -1,15 +1,14 @@
-import extensions.nextSkewNormal
-import extensions.nextWeibull
+import hellewellDESimulation.Agent
+import hellewellDESimulation.Simulation
 import org.junit.Test
 import kotlin.math.pow
-import kotlin.random.Random
 
 class TestDistributions {
 
     @Test
     fun testPreSymptomInfection() {
         val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = HellewellAgent(sim)
+        val agent = Agent(sim)
         val N = 100000
         var nNeg = 0
         for(i in 1..N) {
@@ -22,7 +21,7 @@ class TestDistributions {
     @Test
     fun plotDistribution() {
         val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = HellewellAgent(sim)
+        val agent = Agent(sim)
         val N = 100000
         val nBins = 50
         val samples = DoubleArray(N) {
@@ -44,7 +43,7 @@ class TestDistributions {
     @Test
     fun testDistribution() {
         val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = HellewellAgent(sim)
+        val agent = Agent(sim)
         val N = 100000
         var total = 0.0
         var totsq = 0.0

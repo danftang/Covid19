@@ -1,63 +1,86 @@
 import java.util.*
 import kotlin.random.Random
 
-class Simulation(val pTraceContact: Double, val R0: Double, val pSubclinical: Double) {
+class Simulation(val pTraceInWorkplace: Double, val R0: Double, val pSubclinical: Double) {
+    companion object {
+        val swabTestTime = 0.5
+    }
 
-    val detectedCases = ArrayDeque<Agent>()
     val events = PriorityQueue<Event>()
     var currentTime = 0.0
-    var lastOnsetTime = 0.0
     var cumulativeCases = 0
 
-    fun runHellewellSim(): Boolean {
-        val maxOnset = 12.0*7.0
+    fun run(): Boolean {
+        val maxTime = 15.0*7.0
 
-        while(lastOnsetTime < maxOnset && cumulativeCases < 5000 && events.isNotEmpty()) {
+        while(currentTime < maxTime && cumulativeCases < 5000 && events.isNotEmpty()) {
             step()
         }
-        return (lastOnsetTime < 12.0*7.0 && cumulativeCases < 5000)
+        return (currentTime < maxTime && cumulativeCases < 5000)
     }
+
 
     fun step() {
         if(events.isNotEmpty()) {
             val event = events.poll()
-            while(detectedCases.isNotEmpty()) {
-                contactTrace(detectedCases.pollFirst())
-            }
             currentTime = event.time
-            val nextEvent = event.agent.processNextEvent(this)
-            if(nextEvent != null) {
-                if(nextEvent.type == Event.Type.BECOMESYMPTOMATIC) lastOnsetTime = currentTime
-                events.add(nextEvent)
-            }
-        }
-        else {
-            while(detectedCases.isNotEmpty()) {
-                contactTrace(detectedCases.pollFirst())
+            when(event.type) {
+
+                Event.Type.SWABTEST -> if(swabTest(event.agent)) contactTrace(event.agent)
+
+                else -> {
+                    val nextEvent = event.agent.processNextEvent(this)
+                    if(nextEvent != null) events.add(nextEvent)
+                }
             }
         }
     }
 
 
-    fun accessPrimaryCare(agent: Agent) {
-        detectedCases.addLast(agent)
+    fun contactTrace(agent: InfectedAgent) {
+        // test all in household
+        agent.isolate()
+        agent.household.forEach { familyMember ->
+            if(!familyMember.isIsolated) {
+                accessTestingCentre(familyMember)
+                familyMember.isolate()
+//                if (familyMember.isSymptomatic(currentTime)) {
+//                    familyMember.isolate()
+//                } else {
+//                    accessTestingCentre(familyMember)
+//                }
+            }
+        }
+
+        // isolate all symptomatic work colleagues and test some proportion of others
+        agent.workplace.forEach { workColleague ->
+            if(!workColleague.isIsolated) {
+                if(workColleague.isSymptomatic(currentTime)) {
+                    accessTestingCentre(workColleague)
+                    workColleague.isolate()
+                } else {
+                    if(Random.nextDouble() < pTraceInWorkplace) accessTestingCentre(workColleague)
+                }
+            }
+        }
+    }
+
+    fun accessTestingCentre(agent: InfectedAgent) {
+            events.add(Event(currentTime + swabTestTime, Event.Type.SWABTEST, agent))
     }
 
 
-    fun addUndetectedCase(agent: Agent) {
+    fun addUndetectedCase(agent: InfectedAgent) {
         cumulativeCases++
         val firstEvent = agent.peekNextEvent()
         if(firstEvent != null) events.add(firstEvent)
     }
 
-
-    fun contactTrace(agent: Agent) {
-        agent.contacts.forEach { contact ->
-            if(!contact.isDetected && Random.nextDouble() < pTraceContact) {
-                contact.isDetected = true
-                detectedCases.addLast(contact)
-            }
-        }
+    fun swabTest(agent: InfectedAgent): Boolean {
+//        return true
+        // TODO: Calibrate this
+        return currentTime > agent.onsetTime - 1.5
     }
+
 
 }

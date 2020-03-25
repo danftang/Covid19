@@ -1,26 +1,18 @@
-import extensions.nextNegativeBinomial
-import extensions.nextSkewNormal
-import extensions.nextWeibull
-import kotlin.math.pow
-import kotlin.random.Random
 
 fun main() {
-    for(i in 0..5) {
-        var pTraceContact = i*0.2
-        println("$pTraceContact ${pControl(pTraceContact, 300)}")
-    }
-}
-
-
-fun pControl(pTraceContact: Double, nTrials: Int): Double {
+    val nTrials = 10
+    val R0 = 2.5
     val initialCases = 20
+    val pSubclinical = 0.1
+    val pTraceInWorkplace = 1.0
+
     var nControlled = 0
-
-    for(trial in 1..nTrials) {
-        val sim = Simulation(pTraceContact, 1.5, 0.0)
-        for(i in 1..initialCases) sim.addUndetectedCase(HellewellAgent(sim))
-        if(sim.runHellewellSim()) nControlled++
+    for (trial in 1..nTrials) {
+        val sim = Simulation(pTraceInWorkplace, R0, pSubclinical)
+        for (i in 1..initialCases) sim.addUndetectedCase(InfectedAgent(sim))
+        if (sim.run()) nControlled++
     }
-    return nControlled.toDouble()/nTrials
-}
+    val pControl = nControlled.toDouble() / nTrials
+    println("$pTraceInWorkplace $pControl")
 
+}
