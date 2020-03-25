@@ -8,7 +8,8 @@ class TestDistributions {
 
     @Test
     fun testPreSymptomInfection() {
-        val agent = HellewellAgent(0.0)
+        val sim = Simulation(0.8, 3.5, 0.1)
+        val agent = HellewellAgent(sim)
         val N = 100000
         var nNeg = 0
         for(i in 1..N) {
@@ -20,7 +21,8 @@ class TestDistributions {
 
     @Test
     fun plotDistribution() {
-        val agent = HellewellAgent(0.0)
+        val sim = Simulation(0.8, 3.5, 0.1)
+        val agent = HellewellAgent(sim)
         val N = 100000
         val nBins = 50
         val samples = DoubleArray(N) {
@@ -41,15 +43,19 @@ class TestDistributions {
 
     @Test
     fun testDistribution() {
-        val agent = HellewellAgent(0.0)
+        val sim = Simulation(0.8, 3.5, 0.1)
+        val agent = HellewellAgent(sim)
         val N = 100000
         var total = 0.0
         var totsq = 0.0
+        var nNeg = 0
         for(i in 1..N) {
-            val x = agent.infectionTime(0.0)
+            val x = agent.infectionTime(10.0)
             total += x
             totsq += x*x
+            if(x < 10.0) nNeg++
         }
+        println("proportion less than 10 = ${nNeg.toDouble()/N}")
         println("mean = ${total/N.toDouble()}")
         println("variance = ${totsq/N.toDouble()- (total/N.toDouble()).pow(2)}")
         println("SD = ${(totsq/N.toDouble()- (total/N.toDouble()).pow(2)).pow(0.5)}")

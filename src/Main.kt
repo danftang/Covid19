@@ -7,29 +7,19 @@ import kotlin.random.Random
 fun main() {
     for(i in 0..5) {
         var pTraceContact = i*0.2
-        println("$pTraceContact ${pControl(pTraceContact)}")
+        println("$pTraceContact ${pControl(pTraceContact, 300)}")
     }
 }
 
 
-fun pControl(pTraceContact: Double): Double {
+fun pControl(pTraceContact: Double, nTrials: Int): Double {
+    val initialCases = 20
     var nControlled = 0
-    val nTrials = 20
-    for(trial in 1..nTrials) {
-        val sim = Simulation(pTraceContact)
-        val initialCases = 20
-        val nDays = 112
 
-        for(i in 1..initialCases) sim.addUndetectedCase(HellewellAgent(0.0))
-        while(sim.currentTime < nDays && sim.events.size < 5000 && sim.events.isNotEmpty()) {
-            sim.step()
-        }
-        if(sim.lastInfectionTime < 12.0*7.0 && sim.events.size < 5000) {
-            nControlled++
-//            println("Controlled")
-        } else {
-//            println("out of control")
-        }
+    for(trial in 1..nTrials) {
+        val sim = Simulation(pTraceContact, 1.5, 0.0)
+        for(i in 1..initialCases) sim.addUndetectedCase(HellewellAgent(sim))
+        if(sim.runHellewellSim()) nControlled++
     }
     return nControlled.toDouble()/nTrials
 }

@@ -4,9 +4,9 @@ import org.junit.Test
 import kotlin.math.max
 
 object Simulation {
-    var pMissed: Double = 0.2
-    var pAsymptomatic = 0.0
-    var R0 = 2.5
+//    var pMissed: Double = 0.2
+//    var pAsymptomatic = 0.0
+//    var R0 = 2.5
     var maxOnsetTime = 12.0*7.0
     var maxCases = 5000
     var nInitialAgents = 20

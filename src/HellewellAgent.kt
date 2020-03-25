@@ -7,17 +7,15 @@ import kotlin.random.Random
 // Agent as described in Hellewell et.al., 2020,
 // https://doi.org/10.1016/S2214-109X(20)30074-7
 class HellewellAgent: Agent {
-    val R0 = 2.5
-    val pSubclinical = 0.0
 
     val eventQueue = PriorityQueue<Event>()
     override val contacts = ArrayList<HellewellAgent>()
     override var isDetected = false
 
-    constructor(currentTime: Double) {
+    constructor(sim: Simulation) {
         val incubationPeriod = incubationTime()
-        val symptomOnsetTime = currentTime + incubationPeriod
-        val selfIsolationTime = if(!isSubclinical()) {
+        val symptomOnsetTime = sim.currentTime + incubationPeriod
+        val selfIsolationTime = if(!isSubclinical(sim)) {
             eventQueue.add(Event(symptomOnsetTime, Event.Type.BECOMESYMPTOMATIC, this))
             val selfIsolationTime =  symptomOnsetTime + symptomOnsetToSelfIsolation()
             eventQueue.add(Event(selfIsolationTime, Event.Type.SELFISOLATE, this))
@@ -25,16 +23,12 @@ class HellewellAgent: Agent {
         } else {
             Double.POSITIVE_INFINITY
         }
-        for(infection in 1..numberOfInfected()) {
-            val transmissionTime = currentTime + infectionTime(incubationPeriod)
+        for(infection in 1..numberOfInfected(sim)) {
+            val transmissionTime = sim.currentTime + infectionTime(incubationPeriod)
             if(transmissionTime < selfIsolationTime) {
                 eventQueue.add(Event(transmissionTime, Event.Type.TRANSMIT, this))
             }
         }
-    }
-
-    constructor(currentTime: Double, infector: HellewellAgent): this(currentTime) {
-        contacts.add(infector) // Ambiguity whether the infector is classed as a contact
     }
 
     override fun peekNextEvent(): Event? {
@@ -45,7 +39,7 @@ class HellewellAgent: Agent {
         val nextEvent = eventQueue.poll()
         return when(nextEvent.type) {
             Event.Type.TRANSMIT -> {
-                val newInfectedAgent = HellewellAgent(sim.currentTime,this)
+                val newInfectedAgent = HellewellAgent(sim)
                 contacts.add(newInfectedAgent)
                 sim.addUndetectedCase(newInfectedAgent)
                 peekNextEvent()
@@ -66,8 +60,8 @@ class HellewellAgent: Agent {
     }
 
 
-    fun numberOfInfected(): Int {
-        return Random.nextNegativeBinomial(0.16, R0)
+    fun numberOfInfected(sim: Simulation): Int {
+        return Random.nextNegativeBinomial(0.16, sim.R0)
     }
 
     fun incubationTime(): Double {
@@ -81,8 +75,8 @@ class HellewellAgent: Agent {
         return if(t<1.0) 1.0 else t
     }
 
-    fun isSubclinical(): Boolean {
-        return Random.nextDouble() < pSubclinical
+    fun isSubclinical(sim: Simulation): Boolean {
+        return Random.nextDouble() < sim.pSubclinical
     }
 
     fun symptomOnsetToSelfIsolation(): Double {
