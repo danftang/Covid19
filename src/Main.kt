@@ -1,7 +1,7 @@
 
 fun main() {
     val nTrials = 10
-    val R0 = 2.5
+    val R0 = 3.5
     val initialCases = 20
     val pSubclinical = 0.1
     val pTraceInWorkplace = 1.0

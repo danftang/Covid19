@@ -100,7 +100,7 @@ class InfectedAgent {
 //        return Random.nextWeibull(2.5,5.0)
         // long delay: shape = 2.305172, scale = 9.483875
 //        return Random.nextWeibull(1.651524,4.287786)
-        return 1.5
+        return 1.0
     }
 
     fun transmitInfection(sim: Simulation): InfectedAgent {
