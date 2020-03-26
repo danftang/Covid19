@@ -5,7 +5,7 @@ import kotlin.random.Random
 // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
 // cases and contacts. The Lancet, 8:e488-96
 // https://doi.org/10.1016/S2214-109X(20)30074-7
-class Simulation(val pTraceInWorkplace: Double, val R0: Double, val pSubclinical: Double) {
+class Simulation(val pTraceInWorkplace: Double, val R0: Double) {
     companion object {
         val swabTestTime = 0.5
     }

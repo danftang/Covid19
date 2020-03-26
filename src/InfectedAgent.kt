@@ -13,6 +13,17 @@ class InfectedAgent {
         // TODO: Calibrate this
         val familyMemberInteractionWeight = 10.0
 
+        // Probability that a person will not develop symptoms
+        // given that they are infected.
+        // Mizumoto et.al., 2020, Estimating the asymptomatic proportion of coronavirus
+        // disease 2019 (COVID-19) cases on board the Diamond
+        // Princess cruise ship, Yokohama, Japan,
+        // Mizumoto Kenji et.al.,2020, Estimating the asymptomatic proportion of coronavirus
+        // disease 2019 (COVID-19) cases on board the Diamond Princess cruise ship, Yokohama,
+        // Japan, 2020. Euro Surveill. 2020;25(10):pii=2000180.
+        // https://doi.org/10.2807/1560-7917.ES.2020.25.10.2000180
+        val pSubclinical = 0.179
+
         // Sample from the total number of people a person will infect over
         // the course of the disease
         // Lloyd-Smith Et.al., 2005, Superspreading and the effect of individual
@@ -47,8 +58,8 @@ class InfectedAgent {
 
 
         // Sample whether a person will develop clinical symptoms.
-        fun isSubclinical(sim: Simulation): Boolean {
-            return Random.nextDouble() < sim.pSubclinical
+        fun isSubclinical(): Boolean {
+            return Random.nextDouble() < pSubclinical
         }
 
 
@@ -82,7 +93,7 @@ class InfectedAgent {
         workplace.add(this)
         val incubationPeriod = incubationTime()
         onsetTime = sim.currentTime + incubationPeriod
-        isSubclinical = isSubclinical(sim)
+        isSubclinical = isSubclinical()
         val selfIsolationTime = if(!isSubclinical) {
 //            eventQueue.add(Event(onsetTime, Event.Type.BECOMESYMPTOMATIC, this))
             val selfIsolationTime =  onsetTime + symptomOnsetToSelfIsolationTime()
