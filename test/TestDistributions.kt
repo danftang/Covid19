@@ -1,5 +1,4 @@
-import hellewellDESimulation.Agent
-import hellewellDESimulation.Simulation
+import lib.gnuplot
 import org.junit.Test
 import kotlin.math.pow
 
@@ -7,25 +6,21 @@ class TestDistributions {
 
     @Test
     fun testPreSymptomInfection() {
-        val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = Agent(sim)
         val N = 100000
         var nNeg = 0
         for(i in 1..N) {
-            val x = agent.infectionTime(0.0)
-            if(x<0.0) nNeg++
+            val x = InfectedAgent.exposureToTransmissionTime(10.0)
+            if(x<10.0) nNeg++
         }
         println(nNeg.toDouble()/N)
     }
 
     @Test
     fun plotDistribution() {
-        val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = Agent(sim)
         val N = 100000
         val nBins = 50
         val samples = DoubleArray(N) {
-            agent.symptomOnsetToSelfIsolation()
+            InfectedAgent.numberOfInfected(2.5, false).toDouble()
         }
         val max = samples.max()?:0.0
         val min = samples.min()?:0.0
@@ -37,19 +32,43 @@ class TestDistributions {
         for(i in 0 until nBins) {
             println("${(i+0.5)*step + min} ${population[i].toDouble()/N}")
         }
+        gnuplot {
+            val data = heredoc(population.mapIndexed {i, v -> Pair((i+0.5)*step + min, v.toDouble()/N)})
+            invoke("plot $data with lines")
+        }
+    }
+
+    @Test
+    fun plotIntDistribution() {
+        val N = 100000
+        val samples = IntArray(N) {
+            InfectedAgent.numberOfInfected(2.5, false)
+        }
+        val max = samples.max()?:0
+        val min = samples.min()?:0
+        val nBins = max - min + 1
+        val population = IntArray(nBins) { 0 }
+        samples.forEach { x ->
+            population[x - min]++
+        }
+        for(i in 0 until nBins) {
+            println("${i+min} ${population[i].toDouble()/N}")
+        }
+        gnuplot {
+            val data = heredoc(population.mapIndexed {i, v -> Pair(i + min, v.toDouble()/N)})
+            invoke("plot $data with lines")
+        }
     }
 
 
     @Test
     fun testDistribution() {
-        val sim = Simulation(0.8, 3.5, 0.1)
-        val agent = Agent(sim)
         val N = 100000
         var total = 0.0
         var totsq = 0.0
         var nNeg = 0
         for(i in 1..N) {
-            val x = agent.infectionTime(10.0)
+            val x = InfectedAgent.exposureToTransmissionTime(10.0)
             total += x
             totsq += x*x
             if(x < 10.0) nNeg++

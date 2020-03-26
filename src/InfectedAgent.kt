@@ -7,13 +7,25 @@ import kotlin.random.Random
 
 class InfectedAgent {
     companion object {
+
+        var nHome = 0
+        var nWork = 0
+        var nCommunity = 0
+
         // Given a transmission event, how many times more probable
         // was that event in the infected's household
         // compared to in the community
-        // TODO: Calibrate this
-        val familyMemberInteractionWeight = 10.0
+        // TODO: Calibrate this (against Imperial report #9?)
+        val familyMemberInteractionWeight = 1000.0
 
-        // Probability that a person will not develop symptoms
+
+        // ratio of average number of infections caused by an asymptomatic
+        // over that of a symptomatic.
+        // Ferguson et.al, 2020, Impact of non-pharmaceutical interventions (NPIs) to reduce COVID-
+        // 19 mortality and healthcare demand, Imperial College COVID-19 response team, Report 9
+        val subclinicalInfectiveness = 0.66
+
+        // Sample whether a person will be asymptomatic
         // given that they are infected.
         // Mizumoto et.al., 2020, Estimating the asymptomatic proportion of coronavirus
         // disease 2019 (COVID-19) cases on board the Diamond
@@ -23,14 +35,21 @@ class InfectedAgent {
         // Japan, 2020. Euro Surveill. 2020;25(10):pii=2000180.
         // https://doi.org/10.2807/1560-7917.ES.2020.25.10.2000180
         val pSubclinical = 0.179
+        fun isSubclinical(): Boolean {
+            return Random.nextDouble() < pSubclinical
+        }
+
 
         // Sample from the total number of people a person will infect over
         // the course of the disease
         // Lloyd-Smith Et.al., 2005, Superspreading and the effect of individual
         // variation on disease emergence. Nature, 438:17
         // doi:10.1038/nature04153
-        fun numberOfInfected(sim: Simulation): Int {
-            return Random.nextNegativeBinomial(0.16, sim.R0)
+        fun numberOfInfected(R0: Double, isSubclinical: Boolean): Int {
+            val scale = 1.0/(1.0 - (1.0 - subclinicalInfectiveness)*pSubclinical)
+            val R = R0 * scale * if(isSubclinical) subclinicalInfectiveness else 1.0
+//            return Random.nextNegativeBinomial(0.16, R)
+            return Random.nextNegativeBinomial(1.0, R)
         }
 
 
@@ -54,12 +73,6 @@ class InfectedAgent {
 //        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
             val t = Random.nextSkewNormal(1.95, 2.0, incubationTime)
             return if(t<1.0) 1.0 else t
-        }
-
-
-        // Sample whether a person will develop clinical symptoms.
-        fun isSubclinical(): Boolean {
-            return Random.nextDouble() < pSubclinical
         }
 
 
@@ -102,7 +115,7 @@ class InfectedAgent {
         } else {
             Double.POSITIVE_INFINITY
         }
-        for(infection in 1..numberOfInfected(sim)) {
+        for(infection in 1..numberOfInfected(sim.R0, isSubclinical)) {
             val transmissionTime = sim.currentTime + exposureToTransmissionTime(incubationPeriod)
             if(transmissionTime < selfIsolationTime) {
                 eventQueue.add(Event(transmissionTime, Event.Type.TRANSMIT, this))
@@ -147,16 +160,18 @@ class InfectedAgent {
         val totalWeight = homeWeight + 2.0
         val choice = Random.nextDouble(0.0, totalWeight).toInt()
         return when(choice) {
-            0 -> InfectedAgent(sim)
-            1 -> {
+            0 -> { // community transmission
+                nCommunity++
+                InfectedAgent(sim)
+            }
+            1 -> { // workplace transmission
+                nWork++
                 InfectedAgent(sim, workplace = this.workplace)
             }
-            else -> {
+            else -> { // household transmission
+                nHome++
                 InfectedAgent(sim, household = this.household)
             }
         }
     }
-
-
-
 }
