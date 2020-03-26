@@ -1,6 +1,10 @@
 import java.util.*
 import kotlin.random.Random
 
+// Branching process model of Covid-19 transmission based on that described in
+// Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
+// cases and contacts. The Lancet, 8:e488-96
+// https://doi.org/10.1016/S2214-109X(20)30074-7
 class Simulation(val pTraceInWorkplace: Double, val R0: Double, val pSubclinical: Double) {
     companion object {
         val swabTestTime = 0.5
