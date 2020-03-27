@@ -7,7 +7,8 @@ import kotlin.random.Random
 // https://doi.org/10.1016/S2214-109X(20)30074-7
 class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Double) {
     companion object {
-        val swabTestTime = 0.5
+        val swabTestTime: Double = 1.0
+        var exposureToPositiveTestTime: Double = 2.0
     }
 
     val events = PriorityQueue<Event>()
@@ -84,7 +85,7 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
     fun swabTest(agent: InfectedAgent): Boolean {
 //        return true
         // TODO: Calibrate this
-        return currentTime > agent.onsetTime - 1.5
+        return currentTime > agent.exposureTime + exposureToPositiveTestTime
     }
 
 

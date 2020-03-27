@@ -12,11 +12,19 @@ class InfectedAgent {
         var nWork = 0
         var nCommunity = 0
 
+        // This will be different for different countries
+        // to be calibrated after the fact.
+        // Currently set at 5% as representative
+        // TODO: Check this against expert opinion / SIR model
+        val pImmune = 0.05
+
         // Given a transmission event, how many times more probable
         // was that event in the infected's household
         // compared to in the community
-        // TODO: Calibrate this (against Imperial report #9?)
-        val familyMemberInteractionWeight = 1000.0
+        // Calibrated to give equal numbers of transmission in all three locations
+        // Ferguson et.al, 2020, Impact of non-pharmaceutical interventions (NPIs) to reduce COVID-
+        // 19 mortality and healthcare demand, Imperial College COVID-19 response team, Report 9
+        val familyMemberInteractionWeight = 3.0
 
 
         // ratio of average number of infections caused by an asymptomatic
@@ -49,7 +57,7 @@ class InfectedAgent {
             val scale = 1.0/(1.0 - (1.0 - subclinicalInfectiveness)*pSubclinical)
             val R = R0 * scale * if(isSubclinical) subclinicalInfectiveness else 1.0
 //            return Random.nextNegativeBinomial(0.16, R)
-            return Random.nextNegativeBinomial(1.0, R)
+            return Random.nextNegativeBinomial(10.0, R)
         }
 
 
@@ -80,11 +88,13 @@ class InfectedAgent {
         // Donnelly CA, Ghani AC, Leung GM, et al. Epidemiological
         // determinants of spread of causal agent of severe acute respiratory
         // syndrome in Hong Kong. Lancet 2003; 361: 1761–66
+        var onsetToIsolation: Double = 1.0
+        var compliance: Double = 0.9
         fun symptomOnsetToSelfIsolationTime(): Double {
 //        return Random.nextWeibull(2.5,5.0)
             // long delay: shape = 2.305172, scale = 9.483875
 //        return Random.nextWeibull(1.651524,4.287786)
-            return if(Random.nextDouble() < 0.9) 1.0 else 10.0
+            return if(Random.nextDouble() < compliance) onsetToIsolation else 21.0
         }
 
     }
@@ -92,10 +102,11 @@ class InfectedAgent {
     val eventQueue = PriorityQueue<Event>()
     var isDetected = false
     val onsetTime: Double
+    val exposureTime: Double
     val isSubclinical: Boolean
     val household: Household
     val workplace: Workplace
-//    val communityInfected = ArrayList<InfectedAgent>()
+    val communityInfected = ArrayList<InfectedAgent>()
     val isIsolated: Boolean
         get() = eventQueue.isEmpty()
 
@@ -105,7 +116,8 @@ class InfectedAgent {
         household.add(this)
         workplace.add(this)
         val incubationPeriod = incubationTime()
-        onsetTime = sim.currentTime + incubationPeriod
+        exposureTime = sim.currentTime
+        onsetTime = exposureTime + incubationPeriod
         isSubclinical = isSubclinical()
         val selfIsolationTime = if(!isSubclinical) {
 //            eventQueue.add(Event(onsetTime, Event.Type.BECOMESYMPTOMATIC, this))
@@ -138,9 +150,10 @@ class InfectedAgent {
         if(eventQueue.isEmpty()) return null
         val nextEvent = eventQueue.poll()
         return when(nextEvent.type) {
+
             Event.Type.TRANSMIT -> {
                 val newInfectedAgent = transmitInfection(sim)
-                sim.addUndetectedCase(newInfectedAgent)
+                if(newInfectedAgent != null) sim.addUndetectedCase(newInfectedAgent)
                 peekNextEvent()
             }
 
@@ -155,19 +168,21 @@ class InfectedAgent {
     }
 
 
-    fun transmitInfection(sim: Simulation): InfectedAgent {
+    fun transmitInfection(sim: Simulation): InfectedAgent? {
         val homeWeight = household.nUninfected() * familyMemberInteractionWeight
         val totalWeight = homeWeight + 2.0
         val choice = Random.nextDouble(0.0, totalWeight).toInt()
         return when(choice) {
-            0 -> { // community transmission
+            0 -> if(Random.nextDouble() > pImmune) { // community transmission
                 nCommunity++
-                InfectedAgent(sim)
-            }
-            1 -> { // workplace transmission
-                nWork++
-                InfectedAgent(sim, workplace = this.workplace)
-            }
+                val newInfectedAgent = InfectedAgent(sim)
+                communityInfected.add(newInfectedAgent)
+                newInfectedAgent
+            } else null
+            1 -> if(Random.nextDouble() > pImmune) { // workplace transmission
+                    nWork++
+                    InfectedAgent(sim, workplace = this.workplace)
+            } else null
             else -> { // household transmission
                 nHome++
                 InfectedAgent(sim, household = this.household)

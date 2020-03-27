@@ -1,0 +1,125 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{amssymb,amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{apacite}
+
+\title{Contact-tracing strategies for SARS-CoV-2 eradication
+\textbf{**** UNFINISHED DRAFT ****}
+}
+
+%\date{September 9, 1985}	% Here you can change the date presented in the paper title
+%\date{} 					% Or removing it
+
+\author{
+  Daniel Tang\\
+  Leeds Institute for Data Analytics\thanks{This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No. 757455)}\\
+  University of Leeds\\
+  Leeds, UK\\
+  \texttt{D.Tang@leeds.ac.uk} \\
+  %% examples of more authors
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+As of $27^{th}$ March a large and increasing proportion of the global population are living under social distancing measures in order to control the spread of COVID-19. If these measures are successful we will, in a few months, be in a situation where prevalence is again low in certain parts of the world, however, it is not clear what the best policy will be at that point. This paper investigates the feasibility of using contact tracing along with a combination of other measures in order to ease the social distancing measures while preventing a resurgence of the disease.
+
+\textbf{**** THIS IS UNFINISHED RESEARCH WHICH MAY CONTAIN ERRORS AND IS SUBJECT TO CHANGE ****}
+\end{abstract}
+
+% keywords can be removed
+\keywords{COVID-19, SARS-CoV-2}
+
+\section{Introduction}
+
+Many countries in the world are now committed to a surge in incidence of COVID-19 and are practising social distancing in order to suppress the spread. If successful, these countries will soon be in a situation where prevalence is reducing. Once this is achieved there are a number of strategies:
+\begin{itemize}
+
+\item lift the social distancing measures and allow a second (and subsequent) waves until herd immunity is achieved\cite{ferguson2020impact}.
+
+\item maintain low levels until a vaccine is available
+
+\item eradicate the virus locally and impose strict border controls and containment strategies until the virus is contained globally
+\end{itemize}
+
+Here we investigate the feasibility of the third option by slowly lifting social distancing measures while maintaining self isolation of symptomatic individuals and implementing an extensive testing and contact-tracing capability.
+
+\section{The Model}
+
+In order to do this we modify the stochastic branching model described in \cite{hellewellfeasibility}. Our model differs from the Hellewell et.al. model in the following ways
+\begin{itemize}
+
+\item The model was re-implemented as a discrete-event model in order to capture the dynamics of the positive feedback between the number of cases and the delay in obtaining test results\footnote{Although a discrete-event simulation is slower, execution time is not a bottleneck so it is worthwhile in order to capture the dynamics.} [this feedback has yet to be implemented].
+
+\item The location of infection (household, school/workplace or community) was modelled. This allows us to capture the differences in ease and speed of contact tracing in these three cases, and to capture the effect of different policies for tracing in these contexts. It also allows us to capture the effect of household-wide self-isolation policies such as those implemented in the UK. The relative probability of transmission in the three locations was calibrated in order to obtain equal numbers of transmission events in each location, following \cite{ferguson2020impact}. The size distribution of households was calibrated against\cite{smithHouseholds}.
+
+\item The overdispersion, $k$, of $R$ was set to 10.0 in order to reflect the much lower probability of superspreading of COVID-19 compared to SARS reported in \cite{zhuang2020preliminary} and \cite{riou2020pattern}
+
+\item The infectivity of asymptomatic carriers was reduced to 0.66 that of symptomatics following \cite{ferguson2020impact}
+
+\item The proportion of subclinical cases was set to 17.9\% in line with \cite{:/content/10.2807/1560-7917.ES.2020.25.10.2000180} 
+
+\item We add the ability to make a proportion of the population immune, in order to account for people who became infected during the first wave of infection. This immunity is applied only to school/workplace and community under the assumption that, during the peak, under ``stay at home'' rules, if one member of a household contracts the disease it is highly likely that all other members will also contract it, and so the whole household will become immune. This means that only members of non-immune households can subsequently become infected.
+
+\end{itemize}
+
+The source code of the model is available at \href{https://github.com/danftang/Covid19}{https://github.com/danftang/Covid19}
+
+\section{Preliminary results}
+
+Simulations were carried out to find the probability that an initial population of 100 infected could be eradicated under different scenarios. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. $R0$ was set to $2.4$ and it was assumed that $5\%$ of the population was immune. It was also assumed that $15\%$ of transmission events occur before symptom onset.
+
+\subsection{Policy and Tracing strategy}
+
+It was assumed that a ``self-isolate'' policy was in place such that anyone who becomes symptomatic must self-isolate and report to authorities, at this point all members of that person's household also must self-isolate. It was assumed that there was a delay between symptom onset and self-isolation/reporting. At this point all members of the household are tested and those that test positive are contact-traced. Contact tracing was assumed to identify $90\%$ of contacts in the workplace/school and $10\%$ of contacts in the community. Symptomatic contacts in the workplace must isolate immediately, other contacts are tested and must isolate on positive test result. The time for a test result to be processed was assumed to be 24 hours. It was assumed that $10\%$ of the population do not comply with these rules and never self-isolate.
+
+It was found that the probability of eradication was sensitive to the delay between symptom onset and self-isolation, and to the time after exposure that an infected person would test positive. Figure \ref{onsetToIsolation} shows the probability of eradication against the delay between symptom onset and self-isolation while figure \ref{exposureToPositiveTest} shows the probability of eradication against the delay between exposure and positive test result.
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{onsetToIsolation.pdf}
+\end{center}
+\caption{Probability of eradication for different delays between the onset of symptoms and self-isolation, assuming all infected test positive.}
+\label{onsetToIsolation}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{exposureToPositiveTest.pdf}
+\end{center}
+\caption{Probability of eradication for different delays between exposure and a test result becoming positive, assuming a delay of 1 day between symptom onset and self-isolation.}
+\label{exposureToPositiveTest}
+\end{figure}
+
+\section{Discussion}
+
+These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model, and to properly treat uncertainty, which is large. However, they do indicate that while it is not impossible in theory for contact-tracing to be effective, in practice we face a difficult time in the weeks ahead, and that for contact tracing to work, it is likely that it will have to be implemented in combination with some other policy or policies to suppress community transmission. Our ongoing research will investigate these possibilities.
+
+\pagebreak
+%\bibliographystyle{unsrtnat}
+%\bibliographystyle{apalike} 
+\bibliographystyle{apacite}
+\bibliography{references}
+
+\end{document}
