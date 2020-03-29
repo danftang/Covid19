@@ -52,7 +52,7 @@ As of $27^{th}$ March a large and increasing proportion of the global population
 
 \section{Introduction}
 
-Many countries in the world are now committed to a surge in incidence of COVID-19 and are practising social distancing in order to suppress the spread. If successful, these countries will soon be in a situation where prevalence is reducing. Once this is achieved there are a number of strategies:
+Many countries in the world are now committed to a surge in incidence of COVID-19 and are practising social distancing in order to suppress its spread. If successful, these countries will soon be in a situation where prevalence is reducing. Once this is achieved there are a number of strategies:
 \begin{itemize}
 
 \item lift the social distancing measures and allow a second (and subsequent) waves until herd immunity is achieved\cite{ferguson2020impact}.
@@ -64,37 +64,27 @@ Many countries in the world are now committed to a surge in incidence of COVID-1
 
 Here we investigate the feasibility of the third option by slowly lifting social distancing measures while maintaining self isolation of symptomatic individuals and implementing an extensive testing and contact-tracing capability.
 
-\section{The Model}
+\section{Description of the Model}
 
-In order to do this we modify the stochastic branching model described in \cite{hellewellfeasibility}. Our model differs from the Hellewell et.al. model in the following ways
-\begin{itemize}
+The model we use is an agent-based discrete event simulation. It is based on the stochastic branching model described in \cite{hellewellfeasibility} but modified in order to capture enough detail to explore different testing and contact-tracing strategies\footnote{Although a discrete-event simulation is slower than a branching model, execution time is not a bottleneck so it is worthwhile in order to capture the dynamics.}.
 
-\item The model was re-implemented as a discrete-event model in order to capture the dynamics of the positive feedback between the number of cases and the delay in obtaining test results\footnote{Although a discrete-event simulation is slower, execution time is not a bottleneck so it is worthwhile in order to capture the dynamics.} [this feedback has yet to be implemented].
+The model consists of infected agents, each of which belongs to a household and a workplace/school. Once infected, an agent goes though an incubation period with duration drawn from a Weibull distribution (with shape parameter $2.322737$ and scale parameter $6.492272$)\cite{backer2020incubation}. The transmission serial interval (i.e. time from exposure to transmission) is drawn from a skew normal distribution with location parameter equal to the clinical onset time (i.e. end of the incubation period), scale parameter of 2.0 and skew parameter of 1.95\cite{hellewellfeasibility}. This results in 15\% of infections occurring before clinical onset\cite{hellewellfeasibility}. In order to avoid unrealistically early transmissions, the serial interval was bounded to a minimum of 1 day. At creation, $17.9\%$ of agents are deemed to be asymptomatic\cite{:/content/10.2807/1560-7917.ES.2020.25.10.2000180}\footnote{[TODO: Age weight this figure]}. Asymptomatic carriers are assumed to be $\frac{2}{3}$ as infectious as symptomatic carriers\cite{ferguson2020impact}. The number of susceptible agents that an infected agent will infect if not isolated is drawn from a negative binomial distribution with overdispersion parameter $10.0$\cite{zhuang2020preliminary}\cite{riou2020pattern} and mean of $\frac{3R_0}{3 - \rho}$ for symptomatic agents and $\frac{2R_0}{3 - \rho}$ for asymptomatic agents where $\rho=0.179$ is the probability of being asymptomatic and $R_0$ is the basic reproductive number. If an agent is isolated, any transmission events that occur after isolation will not result in the creation of another infected agent.
 
-\item The location of infection (household, school/workplace or community) was modelled. This allows us to capture the differences in ease and speed of contact tracing in these three cases, and to capture the effect of different policies for tracing in these contexts. It also allows us to capture the effect of household-wide self-isolation policies such as those implemented in the UK. The relative probability of transmission in the three locations was calibrated in order to obtain equal numbers of transmission events in each location, following \cite{ferguson2020impact}. The size distribution of households was calibrated against\cite{smithHouseholds}.
+Each transmission event occurs either in the household, at the workplace/school or in the community. This allows us to capture the differences in ease and speed of contact tracing in these three cases, and to capture the effect of different policies for tracing in these contexts. It also allows us to capture the effect of household-wide self-isolation policies such as those implemented in the UK. The relative probability of transmission in the three locations was calibrated in order to obtain equal aggregate numbers of transmission events in each location, following \cite{ferguson2020impact}. The distribution of number of members in a household was calibrated against\cite{smithHouseholds}.
 
-\item The overdispersion, $k$, of $R$ was set to 10.0 in order to reflect the much lower probability of superspreading of COVID-19 compared to SARS reported in \cite{zhuang2020preliminary} and \cite{riou2020pattern}
+In order to account for people who have already been infected during the first wave of infection, a proportion of the population is immune to infection. A transmission event to an immune agent does not cause infection. This immunity is applied only to school/workplace and community under the assumption that, during the peak, under ``stay at home'' rules, if one member of a household contracts the disease it is highly likely that all other members will also contract it, and so the whole household will become immune. This means that only members of non-immune households can subsequently become infected.
 
-\item The infectivity of asymptomatic carriers was reduced to 0.66 that of symptomatics following \cite{ferguson2020impact}
+\subsection{Contact tracing and isolation policy}
 
-\item The proportion of subclinical cases was set to 17.9\% in line with \cite{:/content/10.2807/1560-7917.ES.2020.25.10.2000180} 
-
-\item We add the ability to make a proportion of the population immune, in order to account for people who became infected during the first wave of infection. This immunity is applied only to school/workplace and community under the assumption that, during the peak, under ``stay at home'' rules, if one member of a household contracts the disease it is highly likely that all other members will also contract it, and so the whole household will become immune. This means that only members of non-immune households can subsequently become infected.
-
-\end{itemize}
+It was assumed that a ``self-isolate'' policy was in place such that anyone who becomes symptomatic must self-isolate and report to authorities. At this point all members of that person's household must also self-isolate. It was assumed that there was a delay between symptom onset and self-isolation/reporting. Once reported, all members of the household are tested and those that test positive are contact-traced. Contact tracing was assumed to identify $90\%$ of contacts in the workplace/school and $10\%$ of contacts in the community. Symptomatic contacts in the workplace must isolate immediately, other contacts are tested and must isolate on positive test result. The time for a test result to be processed was assumed to be 24 hours. It was assumed that $10\%$ of the population do not comply with these rules and never self-isolate or report themselves.
 
 The source code of the model is available at \href{https://github.com/danftang/Covid19}{https://github.com/danftang/Covid19}
 
 \section{Preliminary results}
 
-Simulations were carried out to find the probability that an initial population of 100 infected could be eradicated under different scenarios. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. $R0$ was set to $2.4$ and it was assumed that $5\%$ of the population was immune. It was also assumed that $15\%$ of transmission events occur before symptom onset.
+Simulations were carried out to find the probability that an initial population of 100 infected agents could be eradicated under different scenarios. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. $R0$ was set to $2.4$\cite{ferguson2020impact} and it was assumed that $5\%$ of the population was immune. The probability of eradication was estimated by performing a monte-carlo run of 300 simulations and counting the proportion that achieved eradication.
 
-\subsection{Policy and Tracing strategy}
-
-It was assumed that a ``self-isolate'' policy was in place such that anyone who becomes symptomatic must self-isolate and report to authorities, at this point all members of that person's household also must self-isolate. It was assumed that there was a delay between symptom onset and self-isolation/reporting. At this point all members of the household are tested and those that test positive are contact-traced. Contact tracing was assumed to identify $90\%$ of contacts in the workplace/school and $10\%$ of contacts in the community. Symptomatic contacts in the workplace must isolate immediately, other contacts are tested and must isolate on positive test result. The time for a test result to be processed was assumed to be 24 hours. It was assumed that $10\%$ of the population do not comply with these rules and never self-isolate.
-
-It was found that the probability of eradication was sensitive to the delay between symptom onset and self-isolation, and to the time after exposure that an infected person would test positive. Figure \ref{onsetToIsolation} shows the probability of eradication against the delay between symptom onset and self-isolation while figure \ref{exposureToPositiveTest} shows the probability of eradication against the delay between exposure and positive test result.
-
+It was found that the probability of eradication was highly sensitive to the delay between symptom onset and self-isolation, and to the time after exposure that an infected person would test positive, so monte-carlo runs were performed for a range of values of these parameters. Figure \ref{onsetToIsolation} shows the probability of eradication against the delay between symptom onset and self-isolation while figure \ref{exposureToPositiveTest} shows the probability of eradication against the delay between exposure and positive test result.
 
 \begin{figure}
 \begin{center}
@@ -114,7 +104,7 @@ It was found that the probability of eradication was sensitive to the delay betw
 
 \section{Discussion}
 
-These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model, and to properly treat uncertainty, which is large. However, they do indicate that while it is not impossible in theory for contact-tracing to be effective, in practice we face a difficult time in the weeks ahead, and that for contact tracing to work, it is likely that it will have to be implemented in combination with some other policy or policies to suppress community transmission. Our ongoing research will investigate these possibilities.
+These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model, and to properly treat uncertainty, which is large. However, they do indicate that while it is not impossible in theory for contact-tracing to be effective, a very high proportion of the population will have to isolate, or be isolated, within 1 day of symptom onset. This will be difficult to achieve in practice, and so for contact tracing to work, it is likely that it will have to be implemented in combination with some other policy or policies to suppress community transmission. Our ongoing research will investigate these possibilities.
 
 \pagebreak
 %\bibliographystyle{unsrtnat}

@@ -53,6 +53,7 @@ class InfectedAgent {
         // Lloyd-Smith Et.al., 2005, Superspreading and the effect of individual
         // variation on disease emergence. Nature, 438:17
         // doi:10.1038/nature04153
+        //
         fun numberOfInfected(R0: Double, isSubclinical: Boolean): Int {
             val scale = 1.0/(1.0 - (1.0 - subclinicalInfectiveness)*pSubclinical)
             val R = R0 * scale * if(isSubclinical) subclinicalInfectiveness else 1.0
