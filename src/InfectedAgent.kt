@@ -49,11 +49,18 @@ class InfectedAgent {
 
 
         // Sample from the total number of people a person will infect over
-        // the course of the disease
+        // the course of the disease.
+        // The original Hellewell model used a dispersion of 0.16 reported in
         // Lloyd-Smith Et.al., 2005, Superspreading and the effect of individual
         // variation on disease emergence. Nature, 438:17
         // doi:10.1038/nature04153
-        //
+        // However, this is too low for COVID-19 so we go for 10.0 based on
+        // Zhuang, Z., Zhao, S., Lin, Q., Cao, P., Lou, Y., Yang, L., . . . He, D. (2020). Preliminary
+        // estimating the reproduction number of the coronavirus disease (covid-19) outbreak in republic
+        // of korea from 31 january to 1 march 2020. medRxiv.
+        // and
+        // Riou, J., & Althaus, C. L. (2020). Pattern of early human-to-human transmission of wuhan 2019
+        // novel coronavirus (2019-ncov), december 2019 to january 2020. Eurosurveillance, 25(4).
         fun numberOfInfected(R0: Double, isSubclinical: Boolean): Int {
             val scale = 1.0/(1.0 - (1.0 - subclinicalInfectiveness)*pSubclinical)
             val R = R0 * scale * if(isSubclinical) subclinicalInfectiveness else 1.0
