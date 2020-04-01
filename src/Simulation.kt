@@ -6,10 +6,6 @@ import kotlin.random.Random
 // cases and contacts. The Lancet, 8:e488-96
 // https://doi.org/10.1016/S2214-109X(20)30074-7
 class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Double) {
-    companion object {
-        val swabTestTime: Double = 1.0
-        var exposureToPositiveTestTime: Double = 2.0
-    }
 
     val events = PriorityQueue<Event>()
     var currentTime = 0.0
@@ -31,7 +27,18 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
             currentTime = event.time
             when(event.type) {
 
-                Event.Type.SWABTEST -> if(swabTest(event.agent)) contactTrace(this, event.agent)
+                Event.Type.TESTPOSITIVE -> {
+                    contactTrace(this, event.agent)
+//                    if(!event.agent.testedPositive && !event.agent.isIsolated) {
+//                        event.agent.testedPositive = true
+//                        contactTrace(this, event.agent)
+//                    }
+                }
+
+//                Event.Type.CONTACTTRACE -> {
+////                    println("Got contact trace event")
+//                    contactTrace(this, event.agent)
+//                }
 
                 else -> {
                     val nextEvent = event.agent.processNextEvent(this)
@@ -71,8 +78,8 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
 //        }
 //    }
 
-    fun accessTestingCentre(agent: InfectedAgent) {
-            events.add(Event(currentTime + swabTestTime, Event.Type.SWABTEST, agent))
+    fun selfReport(agent: InfectedAgent) {
+        contactTrace(this, agent)
     }
 
 
@@ -81,12 +88,5 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
         val firstEvent = agent.peekNextEvent()
         if(firstEvent != null) events.add(firstEvent)
     }
-
-    fun swabTest(agent: InfectedAgent): Boolean {
-//        return true
-        // TODO: Calibrate this
-        return currentTime > agent.exposureTime + exposureToPositiveTestTime
-    }
-
 
 }

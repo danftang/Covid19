@@ -1,66 +1,53 @@
 import kotlin.random.Random
 
 object ContactTracingStrategies {
+    var swabTestTime: Double = 1.0
+//    var contactTraceTime = 1.0
+    var pTraceInWorkplace = 0.9
+    var pTraceInCommunity = 0.1
+    var testSensitivity = 0.02     // TODO: Calibrate this
+
 
     fun noTracing(sim : Simulation, agent: InfectedAgent) {}
 
-    fun householdAndWork(sim : Simulation, agent: InfectedAgent) {
-        val pTraceInWorkplace = 0.9
 
-        // test all in household
-        agent.isolate()
-        agent.household.forEach { familyMember ->
-            if(!familyMember.isIsolated) {
-                sim.accessTestingCentre(familyMember)
-                familyMember.isolate()
-            }
-        }
-
-        // isolate all symptomatic work colleagues and test some proportion of others
-        agent.workplace.forEach { workColleague ->
-            if(!workColleague.isIsolated) {
-                if(workColleague.isSymptomatic(sim.currentTime)) {
-                    sim.accessTestingCentre(workColleague)
-                    workColleague.isolate()
-                } else {
-                    if(Random.nextDouble() < pTraceInWorkplace) sim.accessTestingCentre(workColleague)
-                }
-            }
-        }
-    }
-
-    fun allLocations(sim : Simulation, agent: InfectedAgent) {
-        val pTraceInWorkplace = 0.9
-        val pTraceInCommunity = 0.1
-
-        // test all in household
-        agent.isolate()
-        agent.household.forEach { familyMember ->
-            if(!familyMember.isIsolated) {
-                sim.accessTestingCentre(familyMember)
-                familyMember.isolate()
-            }
-        }
-
-        // isolate all symptomatic work colleagues and test some proportion of others
-        agent.workplace.forEach { workColleague ->
-            if(!workColleague.isIsolated) {
-                if(workColleague.isSymptomatic(sim.currentTime)) {
-                    sim.accessTestingCentre(workColleague)
-                    workColleague.isolate()
-                } else {
-                    if(Random.nextDouble() < pTraceInWorkplace) sim.accessTestingCentre(workColleague)
+    fun trace(sim : Simulation, agent: InfectedAgent) {
+        val now = sim.currentTime
+        agent.quarantine()
+        if (agent.tracedVia !== agent.household) {
+            agent.household.forEach { familyMember ->
+                if(familyMember !== agent) {
+                    familyMember.tracedVia = agent.household
+                    swabTest(sim, familyMember)
+                    familyMember.quarantine()
                 }
             }
         }
 
-        // isolate all symptomatic work colleagues and test some proportion of others
+        if (agent.tracedVia !== agent.workplace) {
+            agent.workplace.forEach { colleague ->
+                if (colleague !== agent && Random.nextDouble() < pTraceInWorkplace) {
+                    colleague.tracedVia = agent.workplace
+                    swabTest(sim, colleague)
+                    if (colleague.isSymptomatic(now)) colleague.quarantine()
+                }
+            }
+        }
+
         agent.communityInfected.forEach { stranger ->
-            if(!stranger.isIsolated) {
-                if(Random.nextDouble() < pTraceInCommunity) sim.accessTestingCentre(stranger)
+            if (Random.nextDouble() < pTraceInCommunity) {
+                stranger.tracedVia = agent.communityInfected
+                swabTest(sim, stranger)
+                if (stranger.isSymptomatic(now)) stranger.quarantine()
             }
         }
-
     }
+
+    fun swabTest(sim: Simulation, agent: InfectedAgent) {
+        if (InfectedAgent.infectiousness(sim.currentTime, agent.onsetTime) > testSensitivity) {
+            sim.events.add(Event(sim.currentTime + swabTestTime, Event.Type.TESTPOSITIVE, agent))
+        }
+    }
+
 
 }

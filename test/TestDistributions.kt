@@ -1,6 +1,9 @@
+import extensions.nextSkewNormal
+import extensions.skewNormalDensity
 import lib.gnuplot
 import org.junit.Test
 import kotlin.math.pow
+import kotlin.random.Random
 
 class TestDistributions {
 
@@ -20,7 +23,7 @@ class TestDistributions {
         val N = 100000
         val nBins = 50
         val samples = DoubleArray(N) {
-            InfectedAgent.numberOfInfected(2.5, false).toDouble()
+            InfectedAgent.exposureToTransmissionTime(4.0)
         }
         val max = samples.max()?:0.0
         val min = samples.min()?:0.0
@@ -34,7 +37,7 @@ class TestDistributions {
         }
         gnuplot {
             val data = heredoc(population.mapIndexed {i, v -> Pair((i+0.5)*step + min, v.toDouble()/N)})
-            invoke("plot $data with lines")
+            invoke("plot [0:10] $data with lines")
         }
     }
 
@@ -56,6 +59,26 @@ class TestDistributions {
         }
         gnuplot {
             val data = heredoc(population.mapIndexed {i, v -> Pair(i + min, v.toDouble()/N)})
+            invoke("plot $data with lines")
+        }
+    }
+
+    @Test
+    fun plotPDF() {
+        val N = 100
+        val density = DoubleArray(N) {
+            skewNormalDensity(1.95, 2.0, 4.0, it/10.0)
+        }
+        var total = 0.0
+        var preSymptom = 0.0
+        for(i in 0 until N) {
+            total += density[i]*0.1
+            if(i < 40) preSymptom += density[i]*0.1
+            println("${i} ${density[i]}")
+        }
+        println("total = $total preSymptom = $preSymptom")
+        gnuplot {
+            val data = heredoc(density.asList())
             invoke("plot $data with lines")
         }
     }

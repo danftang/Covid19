@@ -1,6 +1,7 @@
 import extensions.nextNegativeBinomial
 import extensions.nextSkewNormal
 import extensions.nextWeibull
+import extensions.skewNormalDensity
 import java.lang.IllegalStateException
 import java.util.*
 import kotlin.random.Random
@@ -84,11 +85,17 @@ class InfectedAgent {
         // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
         // cases and contacts. The Lancet, 8:e488-96
         // https://doi.org/10.1016/S2214-109X(20)30074-7
+        val serialIntervalShape = 1.95
+        val serialIntervalScale = 2.0
         fun exposureToTransmissionTime(incubationTime: Double): Double {
             // shape = 30, 1.95, 0.7 for <1%, 15% and 30% before symptom onset respectively
 //        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
-            val t = Random.nextSkewNormal(1.95, 2.0, incubationTime)
+            val t = Random.nextSkewNormal(serialIntervalShape, serialIntervalScale, incubationTime)
             return if(t<1.0) 1.0 else t
+        }
+
+        fun infectiousness(time: Double, onsetTime: Double): Double {
+            return skewNormalDensity(serialIntervalShape, serialIntervalScale, onsetTime, time)
         }
 
 
@@ -108,15 +115,15 @@ class InfectedAgent {
     }
 
     val eventQueue = PriorityQueue<Event>()
-    var isDetected = false
     val onsetTime: Double
     val exposureTime: Double
     val isSubclinical: Boolean
     val household: Household
     val workplace: Workplace
-    val communityInfected = ArrayList<InfectedAgent>()
-    val isIsolated: Boolean
-        get() = eventQueue.isEmpty()
+    val communityInfected = Community()
+
+    var tracedVia: InfectionLocation? = null
+//    var isIsolated: Boolean = false
 
     constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace()) {
         this.household = household
@@ -143,8 +150,26 @@ class InfectedAgent {
         }
     }
 
-    fun isolate() {
+//    fun isolate() {
+//        isIsolated = true
+//        eventQueue.clear() // this prevents any further infections or actions by this agent
+//    }
+
+    fun quarantine() {
         eventQueue.clear()
+    }
+
+    fun traceContacts(pHousehold: Double, pWork: Double, pCommunity: Double, contacts: MutableList<InfectedAgent>) {
+        contacts.add(this)
+        household.forEach { familyMember ->
+            if(Random.nextDouble() < pHousehold) familyMember.traceContacts(0.0, pWork, pCommunity, contacts)
+        }
+        workplace.forEach { workColeague ->
+            if(Random.nextDouble() < pWork) workColeague.traceContacts(pHousehold, 0.0, pCommunity, contacts)
+        }
+        workplace.forEach { stranger ->
+            if(Random.nextDouble() < pWork) stranger.traceContacts(pHousehold, pWork, pCommunity, contacts)
+        }
     }
 
     fun isSymptomatic(time: Double) = !isSubclinical && time > onsetTime
@@ -166,8 +191,7 @@ class InfectedAgent {
             }
 
             Event.Type.SELFISOLATE -> {
-                sim.accessTestingCentre(this)
-                isolate()
+                sim.selfReport(this)
                 null
             }
 
