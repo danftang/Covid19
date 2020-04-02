@@ -80,40 +80,96 @@ It was assumed that a ``self-isolate'' policy was in place such that anyone who 
 
 The source code of the model is available at \href{https://github.com/danftang/Covid19}{https://github.com/danftang/Covid19}
 
-\section{Preliminary results}
+\section{Policy Scenarios}
 
-Simulations were carried out to find the probability that an initial population of 100 infected agents could be eradicated under different scenarios. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. $R0$ was set to $2.4$\cite{ferguson2020impact} and it was assumed that $5\%$ of the population was immune. The probability of eradication was estimated by performing a monte-carlo run of 300 simulations and counting the proportion that achieved eradication.
+Various policy scenarios were simulated to find the probability that an initial population of 100 infected agents could be eradicated. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. It was assumed that $5\%$ of the population was immune. The probability of eradication was estimated by performing a monte-carlo run of 300 simulations and counting the proportion that achieved eradication.
 
-It was found that the probability of eradication was highly sensitive to the delay between symptom onset and self-isolation, and to the proportion of population that comply with self-isolation. Monte-carlo runs were performed for a range of values of these parameters. Figure \ref{onsetToIsolation} shows the probability of eradication against the delay between symptom onset and self-isolation while figure \ref{compliance} shows the probability of eradication against the proportion of population complying with self-isolation.
+\subsection{No contact tracing, self isolation}
+
+Ordering people to self-isolate upon becoming symptomatic is unlikely to work on its own. The only chance of containment is if isolation occurs immediately on symptom onset. Figure \ref{noTracing} shows the case when 15\% of transmission is pre-symptomatic and there is 90\% compliance. This kind of compliance so quickly after symptom onset would only be practical under legal enforcement and close monitoring (e.g. thermal cameras, social stigma, fines etc.) and would only work if R0 is on the low side of the feasible range.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{onsetToIsolation3.pdf}
+\includegraphics[width = 10cm]{noTracingR0.pdf}
 \end{center}
-\caption{Probability of eradication for different delays between the onset of symptoms and self-isolation, assuming 90\% compliance.}
-\label{onsetToIsolation}
+\caption{Probability of eradication under self-isolation only assuming 90\% compliance and 15\% pre-symptomatic transmission.}
+\label{noTracing}
+\end{figure}
+
+\subsection{Whole household isolation}
+
+Ordering a whole household to self-isolate upon any member becoming symptomatic is more effective (Figure \ref{householdQuarantine}) but still not probable enough to be a good strategy.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{householdQuarantineR0.pdf}
+\end{center}
+\caption{Probability of eradication under whole household quarantine assuming 90\% compliance and 15\% pre-symptomatic transmission.}
+\label{householdQuarantine}
+\end{figure}
+
+\subsection{Isolation of whole household and work-colleagues}
+
+Ordering both the household and close contacts at work to be isolated could work under some parameter values. In this scenario, close contacts of a symptomatic at home and work would immediately be asked to self-isolate and take a swab test. Those that tested positive (after a 24 hour delay) would themselves require their whole household and work contacts to also isolate and take a swab test and so on. By instating a legal requirement for companies to force traced contacts to stay (and if possible work) from home and by making it a duty for companies to report symptomatic employees it is feasible that the time from onset to isolation can be made small while making compliance high. Figure \ref{householdWorkplace15} shows that with $R0 \le 3$ and $15\%$ pre-symptomatic transmission then this strategy would have a high chance of success given 90\% compliance. However, at a pre-symptomatic transmission of $50\%$ this strategy looks less feasible (figure \ref{householdWorkplace50}).
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{householdAndWorkplace15pre.pdf}
+\end{center}
+\caption{Probability of eradication under quarantine of whole household and workplace contacts assuming 90\% compliance and 15\% pre-symptomatic transmission.}
+\label{householdWorkplace15}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{compliance.pdf}
+\includegraphics[width = 10cm]{householdAndWorkplace50pre.pdf}
 \end{center}
-\caption{Probability of eradication for different proportion of population complying with self-isolation, assuming a delay of 0.5 days between symptom onset and self-isolation.}
-\label{compliance}
+\caption{Probability of eradication under quarantine of whole household and workplace contacts assuming 90\% compliance and 50\% pre-symptomatic transmission.}
+\label{householdWorkplace50}
 \end{figure}
+
+\subsection{Community contact tracing}
+
+If, in addition to household and workplace tracing, contacts could also be traced in the community, and told to isolate and take a swab test if they had been in close contact with a person who later tested positive, then there is a good chance of success even in the case of $R0 = 3.5$ and $50\%$ pre-symptomatic transmission, see figures \ref{fulltrace2.5} and \ref{fulltrace3.5}.
+
+However, even under this scenario, we need 80\% compliance in the community, in addition to enforcement at work, to have a good chance of success.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{fullTrace50pre25R0.pdf}
+\end{center}
+\caption{Probability of eradication under community tracing assuming 90\% self-report compliance, 50\% pre-symptomatic transmission and $R0 = 2.5$.}
+\label{fulltrace2.5}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{fullTrace50pre35R0.pdf}
+\end{center}
+\caption{Probability of eradication under community tracing assuming 90\% self-report compliance, 50\% pre-symptomatic transmission and $R0 = 3.5$.}
+\label{fulltrace3.5}
+\end{figure}
+
+\section{Contact tracing in the community while maintaining privacy}
+
+Achieving contact tracing that is fast and efficient enough to make the above strategy feasible will require a technological solution, probably by leveraging mobile phones. For any such contact-tracing strategy to be acceptable in the context of a western democracy, the privacy of the participants is of paramount importance. For that reason we suggest the following technological solution to contact tracing:
+
+Each participant must have a mobile phone equipped with Bluetooth and an Internet connection. An app will be installed which turns on the phone's Bluetooth connection. To maintain anonymity, the Bluetooth MAC address will be spoofed to a randomly chosen 24-bit number\footnote{Is this possible?}. The chosen number will be locally stored in the app. If another phone with the app installed comes close for more than a fixed amount of time, then the two will be classed as a ``close contact'' and each phone will store the MAC address of the other's along with it's own MAC address. At intervals of, say, 2 minutes, the MAC address will be changed to a new, randomly chosen number.
+
+As a person travels through the community, the app will collect the temporary MAC addresses of all close contacts, along with the MAC addresses that it spoofed. Because these are randomly generated numbers there is no way to identify anyone or track their movements from the temporary MAC addresses.
+
+If a person tests positive, all the MAC addresses on that person's phone will be made public on the Internet. Since these are just random numbers, no sensitive information is disclosed. Periodically, all apps will check the published numbers against it's own locally stored record of the MAC addresses that it has spoofed. If there is a match, the user can be notified that they are at risk and should self-isolate and be tested.
+
+In this way, all close contacts of a newly confirmed case (as long as they are using the app) can immediately be informed that they are at risk. The only limitation being the uptake of the app and the compliance of the user with advice to self isolate.
+
+In order to encourage people to install the app public shops and buildings could require the app to be installed in order to gain entry[?].
 
 \section{Discussion}
 
-These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model, and to properly treat uncertainty, which is large.
+These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model (particularly sensitivity to the proportion of asymptomatics), and to properly treat uncertainty, which is large.
 
-However, the results do indicate that, at 10\% tracing in the community, an unrealistically high proportion of the population will have to isolate, or be isolated, within hours of symptom onset. So, in practice, for contact tracing to work, extensive community tracing will be necessary or social-distancing measures will have to be in place.
+However, the results indicate that contact tracing in the community will be necessary to have a good chance of eradication. We have presented a technological solution to achieve the speed and accuracy needed to make this possible, while maintaining the privacy of users.
 
-
-
-
- it is likely that it will have to be implemented in combination with some other policy or policies to suppress community transmission. Our ongoing research will investigate these possibilities.
-
-\pagebreak
 %\bibliographystyle{unsrtnat}
 %\bibliographystyle{apalike} 
 \bibliographystyle{apacite}

@@ -4,7 +4,8 @@ class Event(val time: Double, val type: Type, val agent: InfectedAgent): Compara
         TRANSMIT,
         TESTPOSITIVE,
 //        TESTNEGATIVE,
-        CONTACTTRACE,
+//        CONTACTTRACE,
+        BECOMESYMPTOMATIC,
         SELFISOLATE
     }
 

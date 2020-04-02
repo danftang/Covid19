@@ -11,6 +11,18 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
     var currentTime = 0.0
     var cumulativeCases = 0
 
+
+    fun monteCarloRun(nTrials: Int, nInitialCases: Int): Double {
+        var nControlled = 0
+        for (trial in 1..nTrials) {
+            for (i in 1..nInitialCases) addUndetectedCase(InfectedAgent(this))
+            if (run()) nControlled++
+            reset()
+        }
+        return nControlled.toDouble() / nTrials
+    }
+
+
     fun run(): Boolean {
         val maxTime = 15.0*7.0
 
@@ -29,16 +41,7 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
 
                 Event.Type.TESTPOSITIVE -> {
                     contactTrace(this, event.agent)
-//                    if(!event.agent.testedPositive && !event.agent.isIsolated) {
-//                        event.agent.testedPositive = true
-//                        contactTrace(this, event.agent)
-//                    }
                 }
-
-//                Event.Type.CONTACTTRACE -> {
-////                    println("Got contact trace event")
-//                    contactTrace(this, event.agent)
-//                }
 
                 else -> {
                     val nextEvent = event.agent.processNextEvent(this)
@@ -49,37 +52,10 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
     }
 
 
-//    fun contactTrace(agent: InfectedAgent) {
-//        // test all in household
-//        agent.isolate()
-//        agent.household.forEach { familyMember ->
-//            if(!familyMember.isIsolated) {
-//
-//                accessTestingCentre(familyMember)
-//                familyMember.isolate()
-////                if (familyMember.isSymptomatic(currentTime)) {
-////                    familyMember.isolate()
-////                } else {
-////                    accessTestingCentre(familyMember)
-////                }
-//            }
-//        }
-//
-//        // isolate all symptomatic work colleagues and test some proportion of others
-//        agent.workplace.forEach { workColleague ->
-//            if(!workColleague.isIsolated) {
-//                if(workColleague.isSymptomatic(currentTime)) {
-//                    accessTestingCentre(workColleague)
-//                    workColleague.isolate()
-//                } else {
-//                    if(Random.nextDouble() < pTraceInWorkplace) accessTestingCentre(workColleague)
-//                }
-//            }
-//        }
-//    }
-
     fun selfReport(agent: InfectedAgent) {
-        contactTrace(this, agent)
+        agent.tracedVia = agent.communityInfected // safe because we don't check for this later
+        ContactTracingStrategies.swabTest(this, agent)
+//        contactTrace(this, agent)
     }
 
 
@@ -89,4 +65,10 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
         if(firstEvent != null) events.add(firstEvent)
     }
 
+
+    fun reset() {
+        events.clear()
+        currentTime = 0.0
+        cumulativeCases = 0
+    }
 }
