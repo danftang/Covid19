@@ -5,7 +5,7 @@ import kotlin.random.Random
 // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
 // cases and contacts. The Lancet, 8:e488-96
 // https://doi.org/10.1016/S2214-109X(20)30074-7
-class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Double) {
+class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
 
     val events = PriorityQueue<Event>()
     var currentTime = 0.0
@@ -40,7 +40,7 @@ class Simulation(val contactTrace: (Simulation, InfectedAgent)->Unit, val R0: Do
             when(event.type) {
 
                 Event.Type.TESTPOSITIVE -> {
-                    contactTrace(this, event.agent)
+                    contactTrace.processConfirmedCase(this, event.agent)
                 }
 
                 else -> {

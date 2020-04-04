@@ -1,47 +1,46 @@
 import lib.gnuplot
 
 fun main(args: Array<String>) {
-    InfectedAgent.selfIsolationCompliance = 0.9
-    InfectedAgent.onsetToIsolation = 0.0
-    varyPTraceInCommunity(ContactTracingStrategies::fullTrace)
+    InfectedAgent.pCompliance = 0.9
+//    varyPTraceInCommunity()
 }
 
 
-fun varyOnsetToIsolationTime(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracingStrategies::fullTrace) {
+//fun varyOnsetToIsolationTime(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracingStrategies::fullTrace) {
+//    val nTrials = 300
+//    val R0 = 2.4
+//    val initialCases = 100
+//    val data = ArrayList<Pair<Double,Double>>()
+//
+//    for(i in 0..4) {
+//        InfectedAgent.onsetToIsolation = i*0.5
+//        val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
+//        println("${InfectedAgent.onsetToIsolation} $pControl")
+//        data.add(Pair(InfectedAgent.onsetToIsolation, pControl))
+//    }
+//    gnuplot {
+//        val plotData = heredoc(data)
+//        invoke("""
+//            set xlabel "Onset to Isolation time (days)"
+//            set ylabel "Probability of control"
+//            plot $plotData with lines notitle
+//        """)
+//    }
+//}
+
+
+fun varyCompliance(trackingStrategy: ContactTracingStrategy) {
     val nTrials = 300
     val R0 = 2.4
     val initialCases = 100
     val data = ArrayList<Pair<Double,Double>>()
 
-    for(i in 0..4) {
-        InfectedAgent.onsetToIsolation = i*0.5
-        val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-        println("${InfectedAgent.onsetToIsolation} $pControl")
-        data.add(Pair(InfectedAgent.onsetToIsolation, pControl))
-    }
-    gnuplot {
-        val plotData = heredoc(data)
-        invoke("""
-            set xlabel "Onset to Isolation time (days)"
-            set ylabel "Probability of control"
-            plot $plotData with lines notitle
-        """)
-    }
-}
-
-
-fun varyCompliance(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracingStrategies::fullTrace) {
-    val nTrials = 300
-    val R0 = 2.4
-    val initialCases = 100
-    val data = ArrayList<Pair<Double,Double>>()
-
-    InfectedAgent.onsetToIsolation = 0.5
+//    InfectedAgent.onsetToIsolation = 0.5
     for(i in 0..5) {
-        InfectedAgent.selfIsolationCompliance = 0.5 + i*0.1
+        InfectedAgent.pCompliance = 0.5 + i*0.1
         val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-        println("${InfectedAgent.selfIsolationCompliance} $pControl")
-        data.add(Pair(InfectedAgent.selfIsolationCompliance, pControl))
+        println("${InfectedAgent.pCompliance} $pControl")
+        data.add(Pair(InfectedAgent.pCompliance, pControl))
     }
     gnuplot {
         val plotData = heredoc(data)
@@ -54,7 +53,7 @@ fun varyCompliance(trackingStrategy: (Simulation, InfectedAgent) -> Unit = Conta
 }
 
 
-fun varyR0(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracingStrategies::fullTrace) {
+fun varyR0(trackingStrategy: ContactTracingStrategy) {
     val nTrials = 300
     val initialCases = 100
     val data = ArrayList<Pair<Double,Double>>()
@@ -76,7 +75,7 @@ fun varyR0(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracin
 }
 
 
-fun varyPTraceInCommunity(trackingStrategy: (Simulation, InfectedAgent) -> Unit = ContactTracingStrategies::fullTrace) {
+fun varyPTraceInCommunity(trackingStrategy: ContactTracingStrategy) {
     val nTrials = 300
     val initialCases = 100
     val R0 = 3.5

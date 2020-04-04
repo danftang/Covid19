@@ -1,0 +1,88 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{amssymb,amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{apacite}
+
+\title{A contact-tracing mobile phone app for SARS-CoV-2 eradication that maintains user privacy and data protection
+\textbf{**** DRAFT VERSION ****}
+}
+
+%\date{September 9, 1985}	% Here you can change the date presented in the paper title
+%\date{} 					% Or removing it
+
+\author{
+  Daniel Tang\\
+  Leeds Institute for Data Analytics\thanks{This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No. 757455)}\\
+  University of Leeds\\
+  Leeds, UK\\
+  \texttt{D.Tang@leeds.ac.uk} \\
+  %% examples of more authors
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+As of $2^{nd}$ April a large proportion of the global population are living under social distancing measures in order to control the spread of COVID-19. If these measures are successful, in a few months the prevalence in many countries will again be low. At that stage, contact tracing is likely to be an important part of the response in order to prevent a resurgence of the disease but simulations show\cite{tang2020Contact} that manual contact tracing will be too slow and inaccurate to be effective. Here we describe the design of a mobile phone app that is capable of automatically tracing close contacts of users without compromising privacy.
+\end{abstract}
+
+% keywords can be removed
+\keywords{COVID-19, SARS-CoV-2}
+
+\section{Introduction}
+
+Simulations show\cite{tang2020Contact} that traditional methods of contact tracing will not be fast or accurate enough for successful containment of SARS-CoV-2 due to its high $R0$, high proportion of asymptomatic carriers and significant pre-symptomatic transmission. The only chance of containing the virus is by using technology to implement extremely fast and accurate tracing. Efforts in China have demonstrated that this can be achieved, but implementation in western countries is more challenging because user privacy and data protection must be preserved.
+
+\section{Design of a mobile phone app}
+
+We propose the use of a mobile phone app which turns on the phone's Bluetooth connection. A randomly chosen 8-character string is assigned to be the name of the connection\footnote{If it is possible to spoof the bluetooth MAC address then this should be done too to further protect privacy}. If another phone with the app installed comes within 2 meters for one minute, then each phone will locally store the random Bluetooth name of the other's along with it's own Bluetooth name. The Bluetooth name of each device will change every two minutes to a new, randomly chosen string.
+
+As a person travels through the community, the app will collect the Bluetooth names of all encounters, along with its own randomly chosen names during those contacts. Because these are randomly generated they can't be used to identify anyone or track their movements. Names of encounters over 3 weeks old are deleted.
+
+For the UK, if 63 million users create a name every 2 minutes for 3 weeks, then there would be $9.5\times10^{11}$ active names. There are $2^{64}$ possible 8 byte names so the probability that a randomly created name will clash with an existing one is approximately $5\times10^{-8}$. This is acceptably small.
+
+
+If a person tests positive, all the exchanged Bluetooth names of contacts stored on that person's phone are made public on the Internet. Since these are just random strings, no sensitive information is disclosed. Every few hours, all apps will check the published numbers against their own locally stored record of Bluetooth names they have used. If there is a match of 8 or more numbers, the user can be notified that they are at risk and should self-isolate and be tested.
+
+In this way, all close contacts of a newly confirmed case (as long as they are using the app) can immediately be informed that they are at risk. The only limitation being the uptake of the app and the compliance of the user with advice to self isolate. A recent survey\cite{abeler2020Support} shows that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app.
+
+\section{Measuring distance}
+
+When a new Blootooth device is detected, the received signal strength (RSSI) is used as a first approximation of the physical distance. If the strength goes above a threshold an optional alarm is sounded\footnote{The following requires access to the devices microphone so the user can optionally deny this access}. The device whose name string has the lowest binary value sounds the alarm first. The alarm serves to alert the user that another person is near, but also serves to calibrate the Bluetooth signal strength/distance relationship for the current pair of devices in the current surroundings. Encoded within the alarm sound is the Bluetooth device name of the sender and that of the potential close contact (encoding could be done, for example, by using frequency shift keying and an error correcting code such as Reed Solomon). The close-by device listens for this alarm and has exactly one second to decode and process it. Once the alarm is recognised and the recipient name is matched, exactly one second after the receipt of the beginning of the alarm, a response alarm is sent back to the original sender. The original sender can now approximate the distance between devices by measuring the time from sending the original alarm and receiving the response, subtracting 1 second, multiplying this by the speed of sound in air and dividing by 2. Exactly one second later the original device sounds a second alarm in order to allow the other device to also calculate distance. If at any point the communication fails either of the devices can initiate a repeat alarm after waiting for an exponential backoff time.
+
+Speed of sound in air is approximately 340 ms$^{-1}$, so in 1 microsecond sound would travel around 0.34mm. The timing of the alarms can be made accurate to a few tens of microseconds without any particular difficulty so the accuracy of this technique is adequate for the current purposes.
+
+Once the actual distance is found, it can be used to calibrate the RSSI to distance model, for example \cite{zhou2006position}.
+
+\section{Gamification}
+
+In order to encourage people to use the service and to encourage social distancing in public places, perhaps the app could be gamified. Perhaps there could be an in-app pet that the user must look after, and for every real-world close contact, there's a chance that the in-app pet gets infected. The longer the user manages to keep the pet healthy, the more points awarded and the faster the pet will grow from a baby into a healthy adult.
+
+\section{Optional scientific research}
+
+The app could also be used to perform scientific research. Users could optionally upload the number of close-contacts each day for monitoring of social interaction levels. Alternatively, the spread of a ``virtual disease'' could be studied by reserving one of the bits in the Bluetooth name and using it to denote infected or not infected with the virtual disease. It could then be observed how the virtual virus spreads between members of a set of volunteers.
+
+%\bibliographystyle{unsrtnat}
+%\bibliographystyle{apalike} 
+\bibliographystyle{apacite}
+\bibliography{references}
+
+\end{document}

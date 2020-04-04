@@ -13,12 +13,12 @@ class InfectedAgent {
         var nWork = 0
         var nCommunity = 0
 
-        var selfIsolationCompliance: Double = 0.9
+        var pCompliance: Double = 0.9
 
         // This will be different for different countries
         // to be calibrated after the fact.
         // Currently set at 5% as representative
-        // TODO: Check this against expert opinion / SIR model
+        // TODO: Check this against expert opinion / SIR model / Data
         val pImmune = 0.05
 
         // Given a transmission event, how many times more probable
@@ -105,13 +105,13 @@ class InfectedAgent {
         // Donnelly CA, Ghani AC, Leung GM, et al. Epidemiological
         // determinants of spread of causal agent of severe acute respiratory
         // syndrome in Hong Kong. Lancet 2003; 361: 1761–66
-        var onsetToIsolation: Double = 1.0
-        fun symptomOnsetToSelfIsolationTime(): Double {
-//        return Random.nextWeibull(2.5,5.0)
-            // long delay: shape = 2.305172, scale = 9.483875
-//        return Random.nextWeibull(1.651524,4.287786)
-            return onsetToIsolation
-        }
+//        var onsetToIsolation: Double = 0.5
+//        fun symptomOnsetToSelfIsolationTime(): Double {
+////        return Random.nextWeibull(2.5,5.0)
+//            // long delay: shape = 2.305172, scale = 9.483875
+////        return Random.nextWeibull(1.651524,4.287786)
+//            return onsetToIsolation
+//        }
 
     }
 
@@ -119,12 +119,11 @@ class InfectedAgent {
     val onsetTime: Double
     val exposureTime: Double
     val isSubclinical: Boolean
+    val isCompliant: Boolean
     val household: Household
     val workplace: Workplace
     val communityInfected = Community()
-
     var tracedVia: InfectionLocation? = null
-//    var isIsolated: Boolean = false
 
     constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace()) {
         this.household = household
@@ -135,31 +134,20 @@ class InfectedAgent {
         exposureTime = sim.currentTime
         onsetTime = exposureTime + incubationPeriod
         isSubclinical = isSubclinical()
+        isCompliant = Random.nextDouble() < pCompliance
         if(!isSubclinical) eventQueue.add(Event(onsetTime, Event.Type.BECOMESYMPTOMATIC, this))
-
-//        val selfIsolationTime = if(!isSubclinical) {
-//            val selfIsolationTime =  onsetTime + symptomOnsetToSelfIsolationTime()
-//            eventQueue.add(Event(selfIsolationTime, Event.Type.SELFISOLATE, this))
-//            selfIsolationTime
-//        } else {
-//            Double.POSITIVE_INFINITY
-//        }
-
         for(infection in 1..numberOfInfected(sim.R0, isSubclinical)) {
             val transmissionTime = sim.currentTime + exposureToTransmissionTime(incubationPeriod)
             eventQueue.add(Event(transmissionTime, Event.Type.TRANSMIT, this))
         }
     }
 
-//    fun isolate() {
-//        isIsolated = true
-//        eventQueue.clear() // this prevents any further infections or actions by this agent
-//    }
 
     fun quarantine() {
         eventQueue.clear()
     }
 
+    fun infectiousness(time: Double) = infectiousness(time, onsetTime)
 
     fun isSymptomatic(time: Double) = !isSubclinical && time > onsetTime
 
@@ -168,8 +156,10 @@ class InfectedAgent {
     }
 
 
+    // returns next event for this agent
+    // or null if no more events
     fun processNextEvent(sim: Simulation): Event? {
-        if(eventQueue.isEmpty()) return null
+        if(eventQueue.isEmpty()) return null // will be empty if we're quarantined
         val nextEvent = eventQueue.poll()
         return when(nextEvent.type) {
 
@@ -180,28 +170,25 @@ class InfectedAgent {
             }
 
             Event.Type.BECOMESYMPTOMATIC -> {
-                if(tracedVia != null) {
-                    sim.selfReport(this)
+                if (isCompliant) {
+                    sim.contactTrace.reportPossibleCase(sim,this, communityInfected)
                     null // no more events for this agent
+//                    eventQueue.add(
+//                        Event(
+//                            sim.currentTime + symptomOnsetToSelfIsolationTime(),
+//                            Event.Type.SELFISOLATE,
+//                            this
+//                        )
+//                    )
                 } else {
-                    if(Random.nextDouble() < selfIsolationCompliance) {
-                        eventQueue.add(
-                            Event(
-                                sim.currentTime + symptomOnsetToSelfIsolationTime(),
-                                Event.Type.SELFISOLATE,
-                                this
-                            )
-                        )
-                    }
                     peekNextEvent()
                 }
             }
 
-            Event.Type.SELFISOLATE -> {
-                quarantine()
-                sim.selfReport(this)
-                null // no more events for this agent
-            }
+//            Event.Type.SELFISOLATE -> {
+//                sim.contactTrace.reportPossibleCase(sim,this, communityInfected)
+//                null // no more events for this agent
+//            }
 
             else -> throw(IllegalStateException("Unrecognized event"))
         }
