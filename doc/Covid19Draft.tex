@@ -18,7 +18,7 @@
 \usepackage{apacite}
 
 \title{Contact-tracing strategies for SARS-CoV-2 eradication
-\textbf{**** UNFINISHED DRAFT ****}
+\textbf{**** DRAFT ****}
 }
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
@@ -42,9 +42,9 @@
 \maketitle
 
 \begin{abstract}
-As of $3^{rd}$ April a large proportion of the global population are living under social distancing measures in order to control the spread of COVID-19. If these measures are successful, in a few months, prevalence will again be low in certain parts of the world. However, it is not clear what the best policy will be at that point. This paper investigates the feasibility of using contact tracing along with a combination of other measures in order to ease the social distancing measures while preventing a resurgence of the disease. We find that manual contact tracing will not achieve the speed or accuracy needed to contain the disease, and so suggest a technological solution based on tracing via mobile phone app. The proposed solution maintains user's privacy and conforms to European data protection laws.
+As of $5^{rd}$ April a large proportion of the global population are living under social distancing measures in order to control the spread of COVID-19. If these measures are successful, in a few weeks, prevalence will again be low in certain parts of the world. However, it is not clear what the best policy will be at that point. This paper investigates the feasibility of using contact tracing along with a combination of other measures in order to ease the social distancing measures while preventing a resurgence of the disease. We find that manual contact tracing alone is unlikely to achieve the speed or accuracy needed to contain the disease, and so suggest a technological solution based on tracing via mobile phone app. The proposed solution maintains user's privacy and conforms to European data protection laws.
+\textbf{**** This is a live document and is subject to change ****}
 
-\textbf{**** THIS IS UNFINISHED RESEARCH WHICH MAY CONTAIN ERRORS AND IS SUBJECT TO CHANGE ****}
 \end{abstract}
 
 % keywords can be removed
@@ -70,7 +70,7 @@ The model we use is based on the stochastic branching model described in \cite{h
 
 The model consists of infected agents, each of which belongs to a household and a workplace/school. Once infected, an agent goes though an incubation period with duration drawn from a Weibull distribution with shape parameter $2.322737$ and scale parameter $6.492272$\cite{backer2020incubation}. The transmission generation interval (i.e. time from exposure to transmission) is drawn from a skew normal distribution with location parameter equal to the clinical onset time (i.e. end of the incubation period), scale parameter of 2.0 and skew parameter of 1.95\cite{hellewellfeasibility}. This results in 15\% of infections occurring before clinical onset\cite{hellewellfeasibility}. In order to avoid unrealistically early transmissions, the generation interval was bounded to a minimum of 1 day. At creation, $17.9\%$ of agents are deemed to be asymptomatic\cite{:/content/10.2807/1560-7917.ES.2020.25.10.2000180}\footnote{[TODO: Age weight this figure]}. Asymptomatic carriers are assumed to be $\frac{2}{3}$ as infectious as symptomatic carriers\cite{ferguson2020impact}. The number of susceptible agents that an infected agent will infect if not isolated is drawn from a negative binomial distribution with overdispersion parameter $10.0$\cite{zhuang2020preliminary}\cite{riou2020pattern} and mean of $\frac{3R_0}{3 - \rho}$ for symptomatic agents and $\frac{2R_0}{3 - \rho}$ for asymptomatic agents where $\rho=0.179$ is the probability of being asymptomatic and $R_0$ is the basic reproductive number. At each transmission event a new infected agent is created, unless the agent is isolated, in which case the event has no effect.
 
-Each transmission event occurs either in the household, at the workplace/school or in the community. This allows us to capture the differences in ease and speed of contact tracing in these three cases, as well as capturing the effect of closer and more frequent contact with household members compared to workplace and community. Distinguishing household contacts also allows us to simulate the effect of household-wide self-isolation policies such as those implemented in the UK. Finally, it allows us to capture any immunity in the population built up during a first wave of infections. After a first wave of infection we would expect there to be a correlation in immunity between members of the same household since during the peak, under ``stay at home'' rules, if one member of a household contracts the disease it is likely that all other members will also contract it, so we end up with immune and susceptible households. This means that only members of susceptible households can become infected during the contact-tracing stage. The relative probability of transmission in the three locations was calibrated in order to obtain equal aggregate numbers of transmission events in each location\cite{ferguson2020impact}. The distribution of number of members in a household was calibrated against\cite{smithHouseholds}. A transmission event to an immune agent does not cause infection. Immunity is only applied to school/workplace and community transmissions for the reasons outlined above.
+Each transmission event occurs either in the household, at the workplace/school or in the community. This allows us to capture the differences in ease and speed of contact tracing in these three cases, as well as capturing the effect of closer and more frequent contact with household members compared to workplace and community. Distinguishing household contacts also allows us to simulate the effect of household-wide self-isolation policies such as those implemented in the UK. Finally, it allows us to capture any immunity in the population built up during a first wave of infections. After a first wave of infection we would expect there to be a correlation in immunity between members of the same household since during the peak, under ``stay at home'' rules, if one member of a household contracts the disease it is likely that all other members will also contract it, so we end up with immune and susceptible households. This means that only members of susceptible households can become infected during the contact-tracing stage. The relative probability of transmission in the household was 3 times greater in the household than in the other locations. This calibrated in order to obtain equal aggregate numbers of transmission events in each location under no intervention\cite{ferguson2020impact}. The distribution of number of members in a household was calibrated against\cite{smithHouseholds}. A transmission event to an immune agent does not cause infection. Immunity is only applied to school/workplace and community transmissions for the reasons outlined above.
 
 The source code of the model is available at \href{https://github.com/danftang/Covid19}{https://github.com/danftang/Covid19}
 
@@ -80,93 +80,71 @@ The source code of the model is available at \href{https://github.com/danftang/C
 
 Various policy scenarios were simulated to find the probability that an initial population of 100 infected agents could be eradicated. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. It was assumed that $5\%$ of the population was immune. The probability of eradication was estimated by performing a monte-carlo run of 300 simulations and counting the proportion that achieved eradication.
 
-\subsection{No contact tracing, self isolation}
+If not otherwise stated the following default values are used in the scenarios: $15\%$ pre-symptomatic transmission, $R0 = 3.5$, $18\%$ of infected are asymptomatic carriers, $5\%$ of the population are immune. Swab tests take 24 hours to process and come back positive if the agent's infectiousness is above $2\%$ per day in order to exclude positive results during the latent phase.
 
-Ordering people to self-isolate upon becoming symptomatic is unlikely to work on its own. The only chance of containment is if isolation occurs immediately on symptom onset. Figure \ref{noTracing} shows the case when 15\% of transmission is pre-symptomatic and there is 90\% compliance. This kind of compliance so quickly after symptom onset would only be practical under legal enforcement and close monitoring (e.g. thermal cameras, social stigma, fines etc.) and would only work if R0 is on the low side of the feasible range.
+\subsection{Manual contact tracing with household-wide quarantine}
 
-\begin{figure}
-\begin{center}
-\includegraphics[width = 10cm]{noTracingR0.pdf}
-\end{center}
-\caption{Probability of eradication under self-isolation only assuming 90\% compliance and 15\% pre-symptomatic transmission.}
-\label{noTracing}
-\end{figure}
+In this scenario, anyone who becomes symptomatic must immediately self-isolate along with all members of the household. The symptomatic person is tested and if positive close-contacts are traced, quarantined and tested. Further positive results are traced recursively.
 
-\subsection{Whole household isolation}
-
-Ordering a whole household to self-isolate upon any member becoming symptomatic is more effective (Figure \ref{householdQuarantine}) but still not probable enough to be a good strategy.
+In this scenario, the speed and accuracy of the contact tracing is of key importance. Figure \ref{tracingContour} shows the probability of containment for a range of values of the time taken to trace a contact (i.e. perform a test on a suspected case, get results and trace the contact) and of the proportion of close contacts that are traced. This figure is based on the assumption that 75\% of the public comply with the self-isolation policy. As can be seen, the contact tracing would need to be very fast and accurate to have a reasonable chance of containment. For this reason, it seems unlikely that manual contact-tracing, based on interviews with the infected person, will be fast or accurate enough to be effective.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{householdQuarantineR0.pdf}
+\includegraphics[width = 10cm]{tracingContour.pdf}
 \end{center}
-\caption{Probability of eradication under whole household quarantine assuming 90\% compliance and 15\% pre-symptomatic transmission.}
-\label{householdQuarantine}
+\caption{Probability of eradication under self-isolation and contact tracing. Assuming 95\% compliance to self-isolation.}
+\label{tracingContour}
 \end{figure}
 
 \subsection{Isolation of whole household and work-colleagues}
 
-Ordering both the household and close contacts at work to be isolated could work under some parameter values. In this scenario, close contacts of a symptomatic at home and work would immediately be asked to self-isolate and take a swab test. Swab tests take 24 hours to process and come back positive if the agent's infectiousness is above $2\%$ per day. This captures the vast majority of the time the agent is infectious but excludes the latent phase. Those that test positive require their whole household and close work contacts to also isolate and take a swab test and so on. By instating a legal requirement for companies to force traced contacts to stay at home and by making it a duty for companies to report symptomatic employees it is feasible that the time from onset to isolation can be made small while making compliance high. Figure \ref{householdWorkplace15} shows that with $R0 \le 3$ and $15\%$ pre-symptomatic transmission then this strategy would have a high chance of success given 90\% compliance. However, at a pre-symptomatic transmission of $50\%$ this strategy looks less feasible (figure \ref{householdWorkplace50}).
+In this scenario, we have household-wide quarantine as above, but in addition, we assume that companies are (perhaps legally) obliged to report symptomatic employees and have systems in place to record close contacts within the workplace. Under this scenario, we assume that $90\%$ of close contacts within the workplace can be traced and $90\%$ of non-compliant symptomatic cases are reported. The time from first report to isolation of workplace colleagues is taken to be 36 hours, representing the swab test time of 24 hours plus 12 hours delay.
+
+Under this scenario, with the default parameters, all simulations are controlled even without any tracing in the community. With less optimistic values of 30\% pre-symptomatic transmission and 30\% of infections asymptomatic, the probability of control is as shown in figure \ref{householdWorkplace3030}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{householdAndWorkplace15pre.pdf}
+\includegraphics[width = 10cm]{contourWorkplace.pdf}
 \end{center}
-\caption{Probability of eradication under quarantine of whole household and workplace contacts assuming 90\% compliance and 15\% pre-symptomatic transmission.}
-\label{householdWorkplace15}
+\caption{Probability of eradication under quarantine of whole household and workplace contacts assuming 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.}
+\label{householdWorkplace3030}
+\end{figure}
+
+In this case, we would need to trace upwards of 80\% of contacts in the community in order to have a >95\% chance of control.
+
+\subsection{Tracing with mobile phone app}
+
+The only practical way of tracing such a high proportion of contacts in the community is by using technology. Efforts to control the virus in China have demonstrated the use of community tracing technology, but implementation in western countries is more challenging because user privacy and data protection must be preserved. However, a privacy-protecting mobile phone app for contact tracing has been proposed\cite{tang2020Mobile}, so in this scenario, we add the use of this mobile app in addition to household self-isolation and workplace enforcement. We assume that the phone app can track 90\% of close contacts between users. As before, we take the pessimistic values of 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.
+
+In this scenario we assume compliance is an intrinsic property of the agent. A compliant agent will install the mobile phone app and self-isolate upon becoming symptomatic, whereas a non-compliant agent will do neither. This captures the expected correlation between these things, which is important because it makes it more likely that an infectious person in the community will not be using the mobile phone app, and cannot be traced.\footnote{[Non-compliants are more likely to be immune (what is the size of this effect?)]}
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width = 10cm]{mobileTracing.pdf}
+\end{center}
+\caption{Probability of eradication under community tracing with mobile phone assuming 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.}
+\label{mobileTracing}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{householdAndWorkplace50pre.pdf}
+\includegraphics[width = 10cm]{mobileTracingR0.pdf}
 \end{center}
-\caption{Probability of eradication under quarantine of whole household and workplace contacts assuming 90\% compliance and 50\% pre-symptomatic transmission.}
-\label{householdWorkplace50}
-\end{figure}
-
-\subsection{Community contact tracing}
-
-If, in addition to household and workplace tracing, contacts could also be traced in the community, and told to isolate and take a swab test if they had been in close contact with a person who has tested positive, then there is a good chance of success even in the case of $R0 = 3.5$ and $50\%$ pre-symptomatic transmission, see figures \ref{fulltrace2.5} and \ref{fulltrace3.5}.
-
-However, even under this scenario, we need 80\% compliance in the community, in addition to enforcement at work, to have a good chance of success. In order to minimise risk, then, it would be advisable to maintain some social distancing measures in addition to the contact tracing, in order to bring down the effective $R$ value.  
-
-[People who do not install the phone app are more likely to also not report symptoms or self isolate. However, non-compliants more likely to be immune (size of this effect?)]
-
-\begin{figure}
-\begin{center}
-\includegraphics[width = 10cm]{fullTrace50pre25R0.pdf}
-\end{center}
-\caption{Probability of eradication under community tracing assuming 90\% self-report compliance, 50\% pre-symptomatic transmission and $R0 = 2.5$.}
-\label{fulltrace2.5}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-\includegraphics[width = 10cm]{fullTrace50pre35R0.pdf}
-\end{center}
-\caption{Probability of eradication under community tracing assuming 90\% self-report compliance, 50\% pre-symptomatic transmission and $R0 = 3.5$.}
+\caption{Probability of eradication under community tracing assuming 75\% compliance, 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.}
 \label{fulltrace3.5}
 \end{figure}
 
-\section{Contact tracing in the community while maintaining privacy}
 
-Achieving contact tracing that is fast and efficient enough to make the above strategy feasible will require a technological solution, probably by leveraging mobile phones. For any such contact-tracing strategy to be acceptable in the context of a western democracy, the privacy of the participants is of paramount importance. For that reason we suggest the following technological solution to contact tracing:
+Figure \ref{mobileTracing} shows the probability of control for different probabilities of compliance in the population. Even under this scenario, we need >80\% compliance in the community, in addition to enforcement at work, to have a >90\% chance of control. However, a recent survey\cite{abeler2020Support} has shown that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app.
 
-Each participant must have a mobile phone equipped with Bluetooth and an Internet connection. An app will be installed which turns on the phone's Bluetooth connection. To maintain anonymity, the Bluetooth MAC address will be spoofed to a randomly chosen 48-bit number\footnote{Is this possible?}. The chosen number will be locally stored in the app. If another phone with the app installed comes close for more than a fixed amount of time, then the two will be classed as a ``close contact'' and each phone will store the MAC address of the other's along with it's own MAC address. At intervals of, say, 2 minutes, the MAC address will be changed to a new, randomly chosen number.
-
-As a person travels through the community, the app will collect the temporary MAC addresses of all close contacts, along with the MAC addresses that it spoofed. Because these are randomly generated numbers there is no way to identify anyone or track their movements from the temporary MAC addresses.
-
-If a person tests positive, all the MAC addresses on that person's phone will be made public on the Internet. Since these are just random numbers, no sensitive information is disclosed. Periodically, all apps will check the published numbers against it's own locally stored record of the MAC addresses that it has spoofed. If there is a match, the user can be notified that they are at risk and should self-isolate and be tested.
-
-In this way, all close contacts of a newly confirmed case (as long as they are using the app) can immediately be informed that they are at risk. The only limitation being the uptake of the app and the compliance of the user with advice to self isolate.
-
-In order to encourage people to install the app public shops and buildings could require the app to be installed in order to gain entry[?].
+Figure shows the probability of control for different values of $R0$ at 75\% compliance.
 
 \section{Discussion}
 
-These early results are subject to further calibration of the model and are likely to change as our understanding of the dynamics of SARS-CoV-2 develops. It also remains to do a proper sensitivity analysis of the model (particularly sensitivity to the proportion of asymptomatics), and to properly treat uncertainty, which is large.
+We have shown that a policy of household-wide isolation along with workplace enforcement and a mobile phone app for community contact tracing has a good chance of success even under quite pessimistic values of the parameters. However, under pessimistic values, a very high proportion of the population would have to install the app. In this case it may be necessary to offer strong incentives to use the app or even make it mandatory.
 
-However, the results indicate that contact tracing in the community will be necessary to have a good chance of eradication. We have presented a technological solution to achieve the speed and accuracy needed to make this possible, while maintaining the privacy of users.
+The range of uncertainty in the parameters is, however, very large. Under such large uncertainty, the probability of preventing a resurgence of infections can be minimised by adopting a policy of gradual loosening of social distancing measures along with close observation of the data. In this way, the effective $R$ can be gradually increased while constantly using new observations to feed back into the policy by working out if further loosening is possible or more app uptake is necessary.
 
 %\bibliographystyle{unsrtnat}
 %\bibliographystyle{apalike} 

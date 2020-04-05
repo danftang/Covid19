@@ -3,8 +3,9 @@ class Event(val time: Double, val type: Type, val agent: InfectedAgent): Compara
     enum class Type {
         TRANSMIT,
         TESTPOSITIVE,
-//        TESTNEGATIVE,
-//        CONTACTTRACE,
+        TRACEHOUSEHOLD,
+        TRACEWORKPLACE,
+        TRACECOMMUNITY,
         BECOMESYMPTOMATIC,
         SELFISOLATE
     }

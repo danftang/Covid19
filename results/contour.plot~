@@ -1,0 +1,8 @@
+set contour
+unset surface
+set view map
+set cntrparam levels incremental 0,0.2,1
+set key off
+set xlabel 'xaxis'
+set ylabel 'yaxis'
+splot "countour.dat" with lines

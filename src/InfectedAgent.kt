@@ -13,7 +13,8 @@ class InfectedAgent {
         var nWork = 0
         var nCommunity = 0
 
-        var pCompliance: Double = 0.9
+        var pCompliant: Double = 0.75
+        var pForcedToIsolate = 0.0
 
         // This will be different for different countries
         // to be calibrated after the fact.
@@ -45,7 +46,7 @@ class InfectedAgent {
         // disease 2019 (COVID-19) cases on board the Diamond Princess cruise ship, Yokohama,
         // Japan, 2020. Euro Surveill. 2020;25(10):pii=2000180.
         // https://doi.org/10.2807/1560-7917.ES.2020.25.10.2000180
-        val pSubclinical = 0.179
+        var pSubclinical = 0.179
         fun isSubclinical(): Boolean {
             return Random.nextDouble() < pSubclinical
         }
@@ -87,17 +88,17 @@ class InfectedAgent {
         // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
         // cases and contacts. The Lancet, 8:e488-96
         // https://doi.org/10.1016/S2214-109X(20)30074-7
-        val serialIntervalShape = 0.0 //1.95
-        val serialIntervalScale = 2.0
+        var generationIntervalShape = 1.95
+        val generationIntervalScale = 2.0
         fun exposureToTransmissionTime(incubationTime: Double): Double {
             // shape = 30, 1.95, 0.7 for <1%, 15% and 30% before symptom onset respectively
 //        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
-            val t = Random.nextSkewNormal(serialIntervalShape, serialIntervalScale, incubationTime)
+            val t = Random.nextSkewNormal(generationIntervalShape, generationIntervalScale, incubationTime)
             return if(t<1.0) 1.0 else t
         }
 
         fun infectiousness(time: Double, onsetTime: Double): Double {
-            return skewNormalDensity(serialIntervalShape, serialIntervalScale, onsetTime, time)
+            return skewNormalDensity(generationIntervalShape, generationIntervalScale, onsetTime, time)
         }
 
 
@@ -134,7 +135,7 @@ class InfectedAgent {
         exposureTime = sim.currentTime
         onsetTime = exposureTime + incubationPeriod
         isSubclinical = isSubclinical()
-        isCompliant = Random.nextDouble() < pCompliance
+        isCompliant = Random.nextDouble() < pCompliant
         if(!isSubclinical) eventQueue.add(Event(onsetTime, Event.Type.BECOMESYMPTOMATIC, this))
         for(infection in 1..numberOfInfected(sim.R0, isSubclinical)) {
             val transmissionTime = sim.currentTime + exposureToTransmissionTime(incubationPeriod)
@@ -170,7 +171,7 @@ class InfectedAgent {
             }
 
             Event.Type.BECOMESYMPTOMATIC -> {
-                if (isCompliant) {
+                if (isCompliant || (Random.nextDouble() < pForcedToIsolate)) {
                     sim.contactTrace.reportPossibleCase(sim,this, communityInfected)
                     null // no more events for this agent
 //                    eventQueue.add(

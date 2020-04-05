@@ -66,19 +66,30 @@ In this way, all close contacts of a newly confirmed case (as long as they are u
 
 \section{Measuring distance}
 
-When a new Blootooth device is detected, the received signal strength (RSSI) is used as a first approximation of the physical distance. If the strength goes above a threshold an optional alarm is sounded\footnote{The following requires access to the devices microphone so the user can optionally deny this access}. The device whose name string has the lowest binary value sounds the alarm first. The alarm serves to alert the user that another person is near, but also serves to calibrate the Bluetooth signal strength/distance relationship for the current pair of devices in the current surroundings. Encoded within the alarm sound is the Bluetooth device name of the sender and that of the potential close contact (encoding could be done, for example, by using frequency shift keying and an error correcting code such as Reed Solomon). The close-by device listens for this alarm and has exactly one second to decode and process it. Once the alarm is recognised and the recipient name is matched, exactly one second after the receipt of the beginning of the alarm, a response alarm is sent back to the original sender. The original sender can now approximate the distance between devices by measuring the time from sending the original alarm and receiving the response, subtracting 1 second, multiplying this by the speed of sound in air and dividing by 2. Exactly one second later the original device sounds a second alarm in order to allow the other device to also calculate distance. If at any point the communication fails either of the devices can initiate a repeat alarm after waiting for an exponential backoff time.
+When a new Blootooth device is detected, the received signal strength (RSSI) is used as a first approximation of the physical distance. If possible, apps should fix the tx-power of the bluetooth antenna to a standard value. If the received signal strength goes above a threshold an optional alarm is sounded\footnote{The following requires access to the devices microphone so the user can optionally deny this access}. The device whose name string has the lowest binary value sounds the alarm first. The alarm serves to alert the user that another person is near, but also serves to calibrate the Bluetooth signal strength/distance relationship for the current pair of devices in the current surroundings. Encoded within the alarm sound is the Bluetooth device name of the sender and that of the potential close contact (encoding could be done, for example, by using frequency shift keying and an error correcting code such as Reed Solomon). The close-by device listens for this alarm and has exactly one second to decode and process it. Once the alarm is recognised and the recipient name is matched, exactly one second after the receipt of the beginning of the alarm, a response alarm is sent back to the original sender. The original sender can now approximate the distance between devices by measuring the time from sending the original alarm and receiving the response, subtracting 1 second, multiplying this by the speed of sound in air and dividing by 2. Exactly one second later the original device sounds a second alarm in order to allow the other device to also calculate distance. If at any point the communication fails either of the devices can initiate a repeat alarm after waiting for an exponential backoff time. 
 
 Speed of sound in air is approximately 340 ms$^{-1}$, so in 1 microsecond sound would travel around 0.34mm. The timing of the alarms can be made accurate to a few tens of microseconds without any particular difficulty so the accuracy of this technique is adequate for the current purposes.
 
-Once the actual distance is found, it can be used to calibrate the RSSI to distance model, for example \cite{zhou2006position}.
+Once the actual distance is found, it can be used to calibrate the RSSI to distance model. It has been shown\cite{zhou2006position} that, for positive values of RSSI, distance can be approximated as
+\[
+d = A10^{-\frac{R}{20}}
+\]
+where $d$ is the distance, $R$ is the RSSI signal strength and $A$ is the unknown we need to calibrate.
+
+If calibration is not possible by this method, due to background noise or muffled/muted phone then calibration falls back to a standard value based on the make and model of the users phone. A community-generated database of these standard values for all phones could be made available online.
+
+\section{Aggregate contact monitoring through opt-in data gathering}
+
+If, as seems likely, the contact tracing is going on within a context of other social distancing measures, people could opt to allow the app to submit the number of close contacts they have each day along with (again optionally) information about the respondant. This would allow governments to closely monitor the effectiveness of different policy measures in reducing the aggregate daily number of contacts, and allow them to respond to local outbreaks effectively while minimising disruption to peoples lives.
+
+\section{Optional scientific research}
+
+The app could also be used to perform scientific research. The spread of a ``virtual disease'' could be studied by reserving one of the bits in the Bluetooth name and using it to denote infected or not infected with the virtual disease. It could then be observed how the virtual virus spreads between members of a set of volunteers.
 
 \section{Gamification}
 
 In order to encourage people to use the service and to encourage social distancing in public places, perhaps the app could be gamified. Perhaps there could be an in-app pet that the user must look after, and for every real-world close contact, there's a chance that the in-app pet gets infected. The longer the user manages to keep the pet healthy, the more points awarded and the faster the pet will grow from a baby into a healthy adult.
 
-\section{Optional scientific research}
-
-The app could also be used to perform scientific research. Users could optionally upload the number of close-contacts each day for monitoring of social interaction levels. Alternatively, the spread of a ``virtual disease'' could be studied by reserving one of the bits in the Bluetooth name and using it to denote infected or not infected with the virtual disease. It could then be observed how the virtual virus spreads between members of a set of volunteers.
 
 %\bibliographystyle{unsrtnat}
 %\bibliographystyle{apalike} 
