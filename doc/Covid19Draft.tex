@@ -80,7 +80,7 @@ The source code of the model is available at \href{https://github.com/danftang/C
 
 Various policy scenarios were simulated to find the probability that an initial population of 100 infected agents could be eradicated. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. It was assumed that $5\%$ of the population was immune. The probability of eradication was estimated by performing a monte-carlo run of 300 simulations and counting the proportion that achieved eradication.
 
-If not otherwise stated the following default values are used in the scenarios: $15\%$ pre-symptomatic transmission, $R0 = 3.5$, $18\%$ of infected are asymptomatic carriers, $5\%$ of the population are immune. Swab tests take 24 hours to process and come back positive if the agent's infectiousness is above $2\%$ per day in order to exclude positive results during the latent phase.
+If not otherwise stated the following default values are used in the scenarios: $15\%$ pre-symptomatic transmission, $R0 = 3.5$, $18\%$ of infected are asymptomatic carriers, $5\%$ of the population are immune and 75\% of people comply with policy. Swab tests take 24 hours to process and come back positive if the agent's infectiousness is above $2\%$ per day, this excludes positive results during the latent phase.
 
 \subsection{Manual contact tracing with household-wide quarantine}
 
@@ -114,37 +114,35 @@ In this case, we would need to trace upwards of 80\% of contacts in the communit
 
 \subsection{Tracing with mobile phone app}
 
-The only practical way of tracing such a high proportion of contacts in the community is by using technology. Efforts to control the virus in China have demonstrated the use of community tracing technology, but implementation in western countries is more challenging because user privacy and data protection must be preserved. However, a privacy-protecting mobile phone app for contact tracing has been proposed\cite{tang2020Mobile}, so in this scenario, we add the use of this mobile app in addition to household self-isolation and workplace enforcement. We assume that the phone app can track 90\% of close contacts between users. As before, we take the pessimistic values of 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.
+The only practical way of tracing such a high proportion of contacts in the community is by using technology. Efforts to control the virus in China have demonstrated the use of community tracing technology, but implementation in western countries is more challenging because user privacy and data protection must be preserved. However, a privacy-protecting mobile phone app for contact tracing has been proposed\cite{tang2020Mobile}, so in this scenario, we add the use of this mobile app in addition to household self-isolation and workplace enforcement. We assume that the phone app can track 90\% of close contacts between users.
 
-In this scenario we assume compliance is an intrinsic property of the agent. A compliant agent will install the mobile phone app and self-isolate upon becoming symptomatic, whereas a non-compliant agent will do neither. This captures the expected correlation between these things, which is important because it makes it more likely that an infectious person in the community will not be using the mobile phone app, and cannot be traced.\footnote{[Non-compliants are more likely to be immune (what is the size of this effect?)]}
+In this scenario we assume compliance is an intrinsic property of the agent. A compliant agent will install the mobile phone app and self-isolate upon becoming symptomatic, whereas a non-compliant agent will do neither. This captures the expected correlation between these things, which is important because it makes it more likely that an infectious person in the community will not be using the mobile phone app, and therefore cannot be traced.\footnote{[Non-compliants are more likely to be immune (what is the size of this effect?)]}
 
+At the default values, all simulations are controlled. However, the probability of control is very sensitive to the proportion of infections that are asymptomatic. Figure \ref{fulltrace25} shows the case where 25\% of infections are asymptomatic and 30\% of transmission is pre-symptomatic. Figure \ref{fulltrace30} shows the same but with 30\% pre-symptomatic transmission.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{mobileTracing.pdf}
+\includegraphics[width = 10cm]{mobileTracing25Subclinical30pre.pdf}
+\includegraphics[width = 10cm]{mobileTracing25Subclinical30preR0.pdf}
 \end{center}
-\caption{Probability of eradication under community tracing with mobile phone assuming 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.}
-\label{mobileTracing}
+\caption{Probability of eradication under community tracing assuming 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 25\% of infections asymptomatic. Averaged over 1000 simulations.}
+\label{fulltrace25}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-\includegraphics[width = 10cm]{mobileTracingR0.pdf}
+\includegraphics[width = 10cm]{mobileTracing30Subclinical30pre.pdf}
+\includegraphics[width = 10cm]{mobileTracing30Subclinical30preR0.pdf}
 \end{center}
-\caption{Probability of eradication under community tracing assuming 75\% compliance, 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic.}
-\label{fulltrace3.5}
+\caption{Probability of eradication under community tracing with mobile phone assuming 90\% enforcement in the workplace, 30\% pre-symptomatic transmission and 30\% of infections asymptomatic. Averaged over 1000 simulations.}
+\label{fulltrace30}
 \end{figure}
-
-
-Figure \ref{mobileTracing} shows the probability of control for different probabilities of compliance in the population. Even under this scenario, we need >80\% compliance in the community, in addition to enforcement at work, to have a >90\% chance of control. However, a recent survey\cite{abeler2020Support} has shown that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app.
-
-Figure shows the probability of control for different values of $R0$ at 75\% compliance.
 
 \section{Discussion}
 
-We have shown that a policy of household-wide isolation along with workplace enforcement and a mobile phone app for community contact tracing has a good chance of success even under quite pessimistic values of the parameters. However, under pessimistic values, a very high proportion of the population would have to install the app. In this case it may be necessary to offer strong incentives to use the app or even make it mandatory.
+We have shown that a policy of household-wide isolation along with workplace enforcement and a mobile phone app for community contact tracing has a good chance of controlling outbreaks even under quite pessimistic values of the parameters. However, it's success depends on a very high proportion of the population installing the app. A recent survey\cite{abeler2020Support} has shown that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app. In many cases this would be enough, but if, for example, the proportion of asymptomatic carriers turns out to be very high it may be necessary to offer strong incentives to use the app or even make it mandatory.
 
-The range of uncertainty in the parameters is, however, very large. Under such large uncertainty, the probability of preventing a resurgence of infections can be minimised by adopting a policy of gradual loosening of social distancing measures along with close observation of the data. In this way, the effective $R$ can be gradually increased while constantly using new observations to feed back into the policy by working out if further loosening is possible or more app uptake is necessary.
+The range of uncertainty in the parameters is, however, very large and sensitivity to these parameters is high. Under such large uncertainty, the probability of preventing a resurgence of infections can be minimised by adopting a policy of gradual loosening of social distancing measures along with close observation of the data. In this way, the effective $R$ can be gradually increased while constantly using new observations to feed back into the policy by working out if further loosening is possible or more app uptake is necessary.
 
 %\bibliographystyle{unsrtnat}
 %\bibliographystyle{apalike} 

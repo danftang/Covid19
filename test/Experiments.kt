@@ -81,17 +81,18 @@ class Experiments {
             true,
             true
         )
-        InfectedAgent.pCompliant = 0.95
+        InfectedAgent.pCompliant = 0.75
         InfectedAgent.pForcedToIsolate = 0.9
         InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
-        InfectedAgent.pSubclinical = 0.3
+        InfectedAgent.pSubclinical = 0.30
 
-        varyR0(tracingStrategy)
+        //varyR0(tracingStrategy)
+        varyCompliance(tracingStrategy, 3.5)
     }
 
 
     fun varyCompliance(trackingStrategy: ContactTracingStrategy, R0: Double) {
-        val nTrials = 300
+        val nTrials = 1000
         val initialCases = 100
         val data = ArrayList<Pair<Double, Double>>()
 
@@ -115,11 +116,11 @@ class Experiments {
 
 
     fun varyR0(trackingStrategy: ContactTracingStrategy) {
-        val nTrials = 300
+        val nTrials = 1000
         val initialCases = 100
         val data = ArrayList<Pair<Double, Double>>()
 
-        for (i in 0..4) {
+        for (i in 0..5) {
             val R0 = 2.0 + i * 0.5
             val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
             println("${R0} $pControl")
