@@ -46,31 +46,6 @@ class ContactTracingStrategy(
         }
     }
 
-//    fun processConfirmedCase(sim: Simulation, agent: InfectedAgent) {
-//        if (agent.tracedVia !== agent.household) {
-//            agent.household.forEach { familyMember ->
-//                if (familyMember.isCompliant || enforceHouseholdTracing) {
-//                    reportPossibleCase(sim, familyMember, agent.household)
-//                }
-//            }
-//        }
-//
-//        if (agent.tracedVia !== agent.workplace) {
-//            agent.workplace.forEach { colleague ->
-//                if ((colleague.isCompliant || enforceWorkplaceTracing) && Random.nextDouble() < pTraceInWorkplace) {
-//                    reportPossibleCase(sim, colleague, agent.workplace)
-//                }
-//            }
-//        }
-//
-//        if(agent.isCompliant || enforceCommunityTracing) {
-//            agent.communityInfected.forEach { stranger ->
-//                if ((stranger.isCompliant || enforceCommunityTracing) && Random.nextDouble() < pTraceInCommunity) {
-//                    reportPossibleCase(sim, stranger, agent.communityInfected)
-//                }
-//            }
-//        }
-//    }
 
     fun reportPossibleCase(sim: Simulation, agent: InfectedAgent, tracedVia: InfectionLocation) {
         if(agent.tracedVia != null) return // don't trace agents we've already traced
@@ -86,7 +61,7 @@ class ContactTracingStrategy(
         }
         if (wouldTestPositive) {
             if(agent.tracedVia !== agent.workplace) {
-                sim.events.add(Event(sim.currentTime + workplaceProcessingTime, Event.Type.TRACEWORKPLACE, agent))
+                    sim.events.add(Event(sim.currentTime + workplaceProcessingTime, Event.Type.TRACEWORKPLACE, agent))
             }
             sim.events.add(Event(sim.currentTime + communityProcessingTime, Event.Type.TRACECOMMUNITY, agent))
         }

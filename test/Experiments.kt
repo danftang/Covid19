@@ -86,8 +86,8 @@ class Experiments {
         InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
         InfectedAgent.pSubclinical = 0.30
 
-        //varyR0(tracingStrategy)
-        varyCompliance(tracingStrategy, 3.5)
+        varyR0(tracingStrategy)
+//        varyCompliance(tracingStrategy, 3.5)
     }
 
 

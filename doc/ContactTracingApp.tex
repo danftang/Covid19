@@ -18,7 +18,7 @@
 \usepackage{apacite}
 
 \title{A contact-tracing mobile phone app for SARS-CoV-2 eradication that maintains user privacy and data protection
-\textbf{**** DRAFT VERSION ****}
+\textbf{**** DRAFT ****}
 }
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
@@ -49,24 +49,25 @@ As of $2^{nd}$ April a large proportion of the global population are living unde
 
 \section{Introduction}
 
-Simulations show\cite{tang2020Contact} that traditional methods of contact tracing will not be fast or accurate enough for successful containment of SARS-CoV-2 due to its high $R0$, high proportion of asymptomatic carriers and significant pre-symptomatic transmission. The only chance of containing the virus is by using technology to implement extremely fast and accurate tracing. Efforts in China have demonstrated that this can be achieved, but implementation in western countries is more challenging because user privacy and data protection must be preserved.
+Simulations show\cite{tang2020Contact} that traditional methods of contact tracing are unlikely be fast or accurate enough for successful containment of SARS-CoV-2 due to its high $R0$, high proportion of asymptomatic carriers and significant pre-symptomatic transmission. There will be a better chance of containing the virus is if technology is used to implement extremely fast and accurate tracing. Efforts in China have demonstrated that this can be achieved, but implementation in western countries is more challenging because user privacy and data protection must be preserved.
 
 \section{Design of a mobile phone app}
 
-We propose the use of a mobile phone app which turns on the phone's Bluetooth connection. A randomly chosen 8-character string is assigned to be the name of the connection\footnote{If it is possible to spoof the bluetooth MAC address then this should be done too to further protect privacy}. If another phone with the app installed comes within 2 meters for one minute, then each phone will locally store the random Bluetooth name of the other's along with it's own Bluetooth name. The Bluetooth name of each device will change every two minutes to a new, randomly chosen string.
+We propose the use of a mobile phone app that broadcasts Bluetooth LE advertisment packets to locate potential close contacts. Each packet contains a randomly chosen UUID and a value that gives the tx signal strength\footnote{Spoofing of the MAC address should also be used, this is available when Bluetooth LE Privacy is in use.}. If another phone with the app installed comes within 2 meters for one minute, then each phone will locally store the random UUID of the other's along with it's own UUID. The UUID of each device will change every two minutes to a new, randomly chosen value.
 
-As a person travels through the community, the app will collect the Bluetooth names of all encounters, along with its own randomly chosen names during those contacts. Because these are randomly generated they can't be used to identify anyone or track their movements. Names of encounters over 3 weeks old are deleted.
+As a person travels through the community, the app will collect the UUIDs of all encounters, along with its own UUIDs during those contacts. Because these are randomly generated they can't be used to identify anyone or track their movements. UUIDs are stored for 3 weeks, then deleted.
 
-For the UK, if 63 million users create a name every 2 minutes for 3 weeks, then there would be $9.5\times10^{11}$ active names. There are $2^{64}$ possible 8 byte names so the probability that a randomly created name will clash with an existing one is approximately $5\times10^{-8}$. This is acceptably small.
+If a person tests positive, all the exchanged UUIDs of contacts stored on that person's phone are made public on the Internet. Since these are just random numbers, no sensitive information is disclosed. Every few hours, all apps will check the published UUIDs against their own locally stored values. If there is a match of 8 or more UUIDs, the user is notified that they are at risk and should self-isolate and be tested.
 
-
-If a person tests positive, all the exchanged Bluetooth names of contacts stored on that person's phone are made public on the Internet. Since these are just random strings, no sensitive information is disclosed. Every few hours, all apps will check the published numbers against their own locally stored record of Bluetooth names they have used. If there is a match of 8 or more numbers, the user can be notified that they are at risk and should self-isolate and be tested.
-
-In this way, all close contacts of a newly confirmed case (as long as they are using the app) can immediately be informed that they are at risk. The only limitation being the uptake of the app and the compliance of the user with advice to self isolate. A recent survey\cite{abeler2020Support} shows that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app.
+In this way, all close contacts of a newly confirmed case (as long as they are using the app) can immediately be informed that they are at risk. The only limitation being the proportion of people who install the app and the compliance of the user with advice to self isolate. A recent survey\cite{abeler2020Support} shows that public support for an app is high in the UK and that around 74\% of respondents would probably or definitely install a contact-tracing app.
 
 \section{Measuring distance}
 
-When a new Blootooth device is detected, the received signal strength (RSSI) is used as a first approximation of the physical distance. If possible, apps should fix the tx-power of the bluetooth antenna to a standard value. If the received signal strength goes above a threshold an optional alarm is sounded\footnote{The following requires access to the devices microphone so the user can optionally deny this access}. The device whose name string has the lowest binary value sounds the alarm first. The alarm serves to alert the user that another person is near, but also serves to calibrate the Bluetooth signal strength/distance relationship for the current pair of devices in the current surroundings. Encoded within the alarm sound is the Bluetooth device name of the sender and that of the potential close contact (encoding could be done, for example, by using frequency shift keying and an error correcting code such as Reed Solomon). The close-by device listens for this alarm and has exactly one second to decode and process it. Once the alarm is recognised and the recipient name is matched, exactly one second after the receipt of the beginning of the alarm, a response alarm is sent back to the original sender. The original sender can now approximate the distance between devices by measuring the time from sending the original alarm and receiving the response, subtracting 1 second, multiplying this by the speed of sound in air and dividing by 2. Exactly one second later the original device sounds a second alarm in order to allow the other device to also calculate distance. If at any point the communication fails either of the devices can initiate a repeat alarm after waiting for an exponential backoff time. 
+When a new Blootooth device is detected, the received signal strength (RSSI) is used as a first approximation of the physical distance. If the received signal strength goes above a threshold an optional alarm is sounded\footnote{The following requires access to the devices microphone so the user can optionally deny this access}. The device whose name string has the lowest binary value sounds the alarm first. The alarm serves to alert the user that another person is too close, but also serves to calibrate the Bluetooth signal strength/distance relationship for the current pair of devices in the current surroundings. Encoded within the alarm sound is the UUID of the sender and that of the potential close contact (encoding could be done, for example, by using frequency shift keying and an error correcting code such as Reed Solomon). The close-by device listens for this alarm and has exactly one second to decode and process it. Once the alarm is recognised and the recipient name is matched, exactly one second after the receipt of the beginning of the alarm, a response alarm is sent back to the original sender. The original sender can now approximate the distance between devices as
+\[
+d = \frac{(t_r - t_s - 1)c}{2}
+\]
+where $t_r$ is the time that the original alarm began, $t_s$ is the time that the beginning of the response alarm was received and $c$ is the speed of sound in air. Exactly one second later the original device sounds a second alarm in order to allow the other device to also calculate distance. If at any point the communication fails either of the devices can initiate a repeat alarm after waiting for an exponential backoff time. 
 
 Speed of sound in air is approximately 340 ms$^{-1}$, so in 1 microsecond sound would travel around 0.34mm. The timing of the alarms can be made accurate to a few tens of microseconds without any particular difficulty so the accuracy of this technique is adequate for the current purposes.
 
@@ -76,7 +77,7 @@ d = A10^{-\frac{R}{20}}
 \]
 where $d$ is the distance, $R$ is the RSSI signal strength and $A$ is the unknown we need to calibrate.
 
-If calibration is not possible by this method, due to background noise or muffled/muted phone then calibration falls back to a standard value based on the make and model of the users phone. A community-generated database of these standard values for all phones could be made available online.
+If calibration is not possible by this method, due to background noise or muffled/muted phone then calibration falls back to a standard value based on the make and model of the users phone and the value in the tx signal strength of the received advertisement packet. A community-generated database of these standard values for all phones could be made available online.
 
 \section{Aggregate contact monitoring through opt-in data gathering}
 
