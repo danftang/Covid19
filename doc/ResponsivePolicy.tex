@@ -1,0 +1,60 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{amssymb,amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{apacite}
+
+\title{Proposal: Eradication of SARS-CoV-2 with responsive policy and mobile phone contact tracing}
+
+%\date{September 9, 1985}	% Here you can change the date presented in the paper title
+\date{} 					% Or removing it
+
+\author{
+  Daniel Tang\\
+  Leeds Institute for Data Analytics\\
+  Leeds, UK\\
+  \texttt{D.Tang@leeds.ac.uk} \\
+  %% examples of more authors
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+}
+
+
+\begin{document}
+\maketitle
+
+As of $7^{th}$ April a large proportion of the global population are living under stay-at-home measures to control the spread of COVID-19. If these measures are successful then in a few weeks time prevalence will again be low. However, it is not clear what the best policy will be at that point to avoid a resurgence of the disease while minimising social and economic disruption.
+
+Simulations\cite{tang2020Contact}\cite{hellewellfeasibility}\cite{Ferrettieabb6936} show that manual contact tracing alone is unlikely to achieve the speed or accuracy needed to contain the disease due to its high $R0$ and large proportion of asymptomatic transmission, so it has been suggested that mobile phone apps could be used to automate contact-tracing.
+
+However, uncertainty in the key parameters of the disease (especially the proportion of pre-symptomatic transmission and proportion of asymptomatic infections) is so large that we can't say for certain whether contact-tracing in the community is either necessary or sufficient to contain the virus. Although the science will improve, large uncertainties will remain.
+
+In order to deal with such large uncertainty, I propose to use a responsive policy where mobile phone tracing is rolled out and the data from the phones is used to feed back in real time into policy in order to actively track the effect of current measures and quickly react with wider social distancing measures if the data is showing that there is a danger of resurgence.
+
+The proposed research would identify a responsive policy strategy consisting of a number of key metrics that could be derived from the data along with thresholds for these metrics, above which different social distancing measures would be triggered. The thresholds themselves could vary as our understanding of the parameters improves. In this way we can safely enter into a contact-tracing phase with a robust strategy to manage the virus even in the face of very large uncertainty.
+
+In order to identify the metrics, thresholds and social distancing measures we would simulate not only the spread of the virus itself but also simulate the data that would be collected from the mobile phone apps and the policy responses to that data. I propose extending my existing contact-tracing model\cite{tang2020Contact} to include data-gathering and policy strategy. Prior distributions can be assigned to each model parameter to represent the current state of scientific knowledge of the dynamics of the disease. For each policy strategy, we would perform an ensemble of simulations with parameters drawn from the prior distributions to calculate the expected and worst-case result of that strategy in terms of fatalities and social/economic disruption. Since the policy strategies themselves are simulated, we could capture the learning process as more data is gathered from the mobile phone apps and as scientific understanding improves.
+
+Given this, we could then search the space of policy strategies to find the combination of metrics, thresholds and policy interventions that optimises the tradeoff between social and economic disruption and total fatalities while keeping the probability of a resurgence of the disease below a (very small) value.
+
+%\bibliographystyle{unsrtnat}
+%\bibliographystyle{apalike} 
+\bibliographystyle{apacite}
+\bibliography{references}
+
+\end{document}
