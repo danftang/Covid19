@@ -1,5 +1,4 @@
 import java.util.*
-import kotlin.random.Random
 
 // Branching process model of Covid-19 transmission based on that described in
 // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
@@ -61,13 +60,6 @@ class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
                 }
             }
         }
-    }
-
-
-    fun selfReport(agent: InfectedAgent) {
-        agent.tracedVia = agent.communityInfected // safe because we don't check for this later
-        ContactTracingStrategies.swabTest(this, agent)
-//        contactTrace(this, agent)
     }
 
 

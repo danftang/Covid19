@@ -1,4 +1,3 @@
-import java.lang.IllegalStateException
 import kotlin.random.Random
 
 class ContactTracingStrategy(
@@ -38,9 +37,9 @@ class ContactTracingStrategy(
 
     fun traceAgentsCommunity(sim: Simulation, agent: InfectedAgent) {
         if(agent.isCompliant || enforceCommunityTracing) {
-            agent.communityInfected.forEach { stranger ->
+            agent.communityContacts.forEach { stranger ->
                 if ((stranger.isCompliant || enforceCommunityTracing) && Random.nextDouble() < pTraceInCommunity) {
-                    reportPossibleCase(sim, stranger, agent.communityInfected)
+                    reportPossibleCase(sim, stranger, agent.communityContacts)
                 }
             }
         }

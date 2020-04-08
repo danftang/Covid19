@@ -9,7 +9,7 @@ class Household: ArrayList<InfectedAgent>, InfectionLocation {
     var isBeingTraced: Boolean = false
 
     // From ONS, Households and Household Composition in England and Wales: 2001-11
-    constructor(): super() {
+    constructor(): super(4) {
         totalSize = EnumeratedDistribution(listOf(
             Pair(1, 0.30245),
             Pair(2, 0.34229),

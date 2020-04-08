@@ -123,12 +123,13 @@ class InfectedAgent {
     val isCompliant: Boolean
     val household: Household
     val workplace: Workplace
-    val communityInfected = Community()
+    val communityContacts: Community
     var tracedVia: InfectionLocation? = null
 
-    constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace()) {
+    constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace(), communityContacts: Community = Community()) {
         this.household = household
         this.workplace = workplace
+        this.communityContacts = communityContacts
         household.add(this)
         workplace.add(this)
         val incubationPeriod = incubationTime()
@@ -172,7 +173,7 @@ class InfectedAgent {
 
             Event.Type.BECOMESYMPTOMATIC -> {
                 if (isCompliant || (Random.nextDouble() < pForcedToIsolate)) {
-                    sim.contactTrace.reportPossibleCase(sim,this, communityInfected)
+                    sim.contactTrace.reportPossibleCase(sim,this, communityContacts)
                     null // no more events for this agent
 //                    eventQueue.add(
 //                        Event(
@@ -203,8 +204,8 @@ class InfectedAgent {
         return when(choice) {
             0 -> if(Random.nextDouble() > pImmune) { // community transmission
                 nCommunity++
-                val newInfectedAgent = InfectedAgent(sim)
-                communityInfected.add(newInfectedAgent)
+                val newInfectedAgent = InfectedAgent(sim, communityContacts = Community(this))
+                communityContacts.add(newInfectedAgent)
                 newInfectedAgent
             } else null
             1 -> if(Random.nextDouble() > pImmune) { // workplace transmission
