@@ -27,9 +27,9 @@ class ContactTracingStrategy(
 
 
     fun traceAgentsWorkplace(sim: Simulation, agent: InfectedAgent) {
-        agent.workplace.forEach { colleague ->
+        agent.workplaceContacts.forEach { colleague ->
             if ((colleague.isCompliant || enforceWorkplaceTracing) && Random.nextDouble() < pTraceInWorkplace) {
-                reportPossibleCase(sim, colleague, agent.workplace)
+                reportPossibleCase(sim, colleague, agent.workplaceContacts)
             }
         }
     }
@@ -59,7 +59,7 @@ class ContactTracingStrategy(
             }
         }
         if (wouldTestPositive) {
-            if(agent.tracedVia !== agent.workplace) {
+            if(agent.tracedVia !== agent.workplaceContacts) {
                     sim.events.add(Event(sim.currentTime + workplaceProcessingTime, Event.Type.TRACEWORKPLACE, agent))
             }
             sim.events.add(Event(sim.currentTime + communityProcessingTime, Event.Type.TRACECOMMUNITY, agent))

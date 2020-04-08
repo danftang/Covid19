@@ -1,3 +1,8 @@
-class Workplace: InfectionLocation, ArrayList<InfectedAgent>(4) {
-    var isBeingTraced: Boolean = false
+class Workplace: InfectionLocation, ArrayList<InfectedAgent> {
+    constructor(): super(4)
+
+    constructor(infector: InfectedAgent): this() {
+        add(infector)
+    }
+
 }

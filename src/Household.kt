@@ -6,7 +6,6 @@ import kotlin.random.Random
 
 class Household: ArrayList<InfectedAgent>, InfectionLocation {
     val totalSize: Int
-    var isBeingTraced: Boolean = false
 
     // From ONS, Households and Household Composition in England and Wales: 2001-11
     constructor(): super(4) {

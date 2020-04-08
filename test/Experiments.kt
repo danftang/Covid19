@@ -174,8 +174,8 @@ class Experiments {
                 trackingStrategy.householdProcessingTime = i * 0.5
                 trackingStrategy.workplaceProcessingTime = i * 0.5
                 trackingStrategy.communityProcessingTime = i * 0.5
-                trackingStrategy.pTraceInCommunity = j*0.2
-                trackingStrategy.pTraceInWorkplace = j*0.2
+                trackingStrategy.pTraceInCommunity = 0.5 + j*0.1
+                trackingStrategy.pTraceInWorkplace = 0.5 + j*0.1
                 val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
                 println("${trackingStrategy.communityProcessingTime} ${trackingStrategy.pTraceInWorkplace} $pControl")
                 data.add(Triple(trackingStrategy.communityProcessingTime.toFloat(), trackingStrategy.pTraceInWorkplace.toFloat(), pControl.toFloat()))

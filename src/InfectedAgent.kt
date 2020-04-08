@@ -47,10 +47,20 @@ class InfectedAgent {
         // Japan, 2020. Euro Surveill. 2020;25(10):pii=2000180.
         // https://doi.org/10.2807/1560-7917.ES.2020.25.10.2000180
         var pSubclinical = 0.179
-        fun isSubclinical(): Boolean {
-            return Random.nextDouble() < pSubclinical
-        }
+        fun isSubclinical() = Random.nextDouble() < pSubclinical
 
+
+        // Sample from time from first exposure to infection of another person.
+        // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
+        // cases and contacts. The Lancet, 8:e488-96
+        // https://doi.org/10.1016/S2214-109X(20)30074-7
+        // shape = 30, 1.95, 0.7 for <1%, 15% and 30% before symptom onset respectively
+        var generationIntervalShape = 1.95
+        val generationIntervalScale = 2.0
+        fun exposureToTransmissionTime(incubationTime: Double): Double {
+            val t = Random.nextSkewNormal(generationIntervalShape, generationIntervalScale, incubationTime)
+            return if(t<1.0) 1.0 else t
+        }
 
         // Sample from the total number of people a person will infect over
         // the course of the disease.
@@ -84,19 +94,6 @@ class InfectedAgent {
         }
 
 
-        // Sample from time from first exposure to infection of another person.
-        // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
-        // cases and contacts. The Lancet, 8:e488-96
-        // https://doi.org/10.1016/S2214-109X(20)30074-7
-        var generationIntervalShape = 1.95
-        val generationIntervalScale = 2.0
-        fun exposureToTransmissionTime(incubationTime: Double): Double {
-            // shape = 30, 1.95, 0.7 for <1%, 15% and 30% before symptom onset respectively
-//        return Random.nextSkewNormal(1.95, 2.0, incubationTime)
-            val t = Random.nextSkewNormal(generationIntervalShape, generationIntervalScale, incubationTime)
-            return if(t<1.0) 1.0 else t
-        }
-
         fun infectiousness(time: Double, onsetTime: Double): Double {
             return skewNormalDensity(generationIntervalShape, generationIntervalScale, onsetTime, time)
         }
@@ -122,16 +119,15 @@ class InfectedAgent {
     val isSubclinical: Boolean
     val isCompliant: Boolean
     val household: Household
-    val workplace: Workplace
+    val workplaceContacts: Workplace
     val communityContacts: Community
     var tracedVia: InfectionLocation? = null
 
-    constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace(), communityContacts: Community = Community()) {
+    constructor(sim: Simulation, household: Household = Household(), workplaceContacts: Workplace = Workplace(), communityContacts: Community = Community()) {
         this.household = household
-        this.workplace = workplace
+        this.workplaceContacts = workplaceContacts
         this.communityContacts = communityContacts
         household.add(this)
-        workplace.add(this)
         val incubationPeriod = incubationTime()
         exposureTime = sim.currentTime
         onsetTime = exposureTime + incubationPeriod
@@ -175,22 +171,10 @@ class InfectedAgent {
                 if (isCompliant || (Random.nextDouble() < pForcedToIsolate)) {
                     sim.contactTrace.reportPossibleCase(sim,this, communityContacts)
                     null // no more events for this agent
-//                    eventQueue.add(
-//                        Event(
-//                            sim.currentTime + symptomOnsetToSelfIsolationTime(),
-//                            Event.Type.SELFISOLATE,
-//                            this
-//                        )
-//                    )
                 } else {
                     peekNextEvent()
                 }
             }
-
-//            Event.Type.SELFISOLATE -> {
-//                sim.contactTrace.reportPossibleCase(sim,this, communityInfected)
-//                null // no more events for this agent
-//            }
 
             else -> throw(IllegalStateException("Unrecognized event"))
         }
@@ -209,8 +193,10 @@ class InfectedAgent {
                 newInfectedAgent
             } else null
             1 -> if(Random.nextDouble() > pImmune) { // workplace transmission
-                    nWork++
-                    InfectedAgent(sim, workplace = this.workplace)
+                nWork++
+                val newInfectedAgent = InfectedAgent(sim, workplaceContacts = Workplace(this))
+                workplaceContacts.add(newInfectedAgent)
+                newInfectedAgent
             } else null
             else -> { // household transmission
                 nHome++
