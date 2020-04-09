@@ -2,7 +2,7 @@
 class Event(val time: Double, val type: Type, val agent: InfectedAgent): Comparable<Event> {
     enum class Type {
         TRANSMIT,
-        TESTPOSITIVE,
+        PCRTESTPOSITIVE,
         TRACEHOUSEHOLD,
         TRACEWORKPLACE,
         TRACECOMMUNITY,

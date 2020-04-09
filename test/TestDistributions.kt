@@ -23,7 +23,9 @@ class TestDistributions {
         val N = 100000
         val nBins = 50
         val samples = DoubleArray(N) {
-            InfectedAgent.exposureToTransmissionTime(4.0)
+//            InfectedAgent.exposureToTransmissionTime(4.0)
+//            InfectedAgent.incubationTime()
+            Random.nextSkewNormal(1.95, 2.0, 1.0)
         }
         val max = samples.max()?:0.0
         val min = samples.min()?:0.0

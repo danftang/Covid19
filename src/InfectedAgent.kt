@@ -121,6 +121,8 @@ class InfectedAgent {
     val household: Household
     val workplaceContacts: Workplace
     val communityContacts: Community
+    var isQuarantined: Boolean = false
+    var hasTestedPositive: Boolean = false
     var tracedVia: InfectionLocation? = null
 
     constructor(sim: Simulation, household: Household = Household(), workplaceContacts: Workplace = Workplace(), communityContacts: Community = Community()) {
@@ -142,7 +144,8 @@ class InfectedAgent {
 
 
     fun quarantine() {
-        eventQueue.clear()
+        isQuarantined = true
+//        eventQueue.clear()
     }
 
     fun infectiousness(time: Double) = infectiousness(time, onsetTime)
@@ -162,18 +165,22 @@ class InfectedAgent {
         return when(nextEvent.type) {
 
             Event.Type.TRANSMIT -> {
-                val newInfectedAgent = transmitInfection(sim)
-                if(newInfectedAgent != null) sim.addUndetectedCase(newInfectedAgent)
+                if(!isQuarantined) {
+                    val newInfectedAgent = transmitInfection(sim)
+                    if (newInfectedAgent != null) sim.addUndetectedCase(newInfectedAgent)
+                }
                 peekNextEvent()
             }
 
             Event.Type.BECOMESYMPTOMATIC -> {
                 if (isCompliant || (Random.nextDouble() < pForcedToIsolate)) {
-                    sim.contactTrace.reportPossibleCase(sim,this, communityContacts)
-                    null // no more events for this agent
-                } else {
-                    peekNextEvent()
+                    if(isQuarantined) {
+                        sim.contactTrace.doSwabTests(sim, this)
+                    } else {
+                        sim.contactTrace.reportPossibleCase(sim, this, communityContacts)
+                    }
                 }
+                peekNextEvent()
             }
 
             else -> throw(IllegalStateException("Unrecognized event"))

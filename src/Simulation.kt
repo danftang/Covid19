@@ -38,9 +38,10 @@ class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
             currentTime = event.time
             when(event.type) {
 
-//                Event.Type.TESTPOSITIVE -> {
-//                    contactTrace.processConfirmedCase(this, event.agent)
-//                }
+                Event.Type.PCRTESTPOSITIVE -> {
+                    event.agent.hasTestedPositive = true
+                    contactTrace.initiateTrace(this, event.agent)
+                }
 
                 Event.Type.TRACEHOUSEHOLD -> {
                     contactTrace.traceAgentsHousehold(this, event.agent)

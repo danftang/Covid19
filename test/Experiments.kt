@@ -22,7 +22,7 @@ class Experiments {
     @Test
     fun manualTraceWithWorkplaceEnforcement() {
         val trackingStrategy = ContactTracingStrategy(
-            0.0, 1.5,
+            1.0, 0.5,
             Double.NaN,
             0.9,
             Double.NaN,
@@ -55,7 +55,7 @@ class Experiments {
     @Test
     fun phoneAppContactTracing() {
         val tracingStrategy = ContactTracingStrategy(
-            1.0, 1.0, 1.0,
+            1.0, 0.0, 0.0,
             0.9,
             0.9,
             false,
@@ -73,7 +73,7 @@ class Experiments {
     @Test
     fun phoneAppContactTracingR0() {
         val tracingStrategy = ContactTracingStrategy(
-            1.0, 1.0, 1.0,
+            1.0, 0.0, 0.0,
             0.9,
             0.9,
             false,
@@ -84,7 +84,7 @@ class Experiments {
         InfectedAgent.pCompliant = 0.75
         InfectedAgent.pForcedToIsolate = 0.9
         InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
-        InfectedAgent.pSubclinical = 0.30
+        InfectedAgent.pSubclinical = 0.3
 
         varyR0(tracingStrategy)
 //        varyCompliance(tracingStrategy, 3.5)
@@ -121,7 +121,7 @@ class Experiments {
         val data = ArrayList<Pair<Double, Double>>()
 
         for (i in 0..5) {
-            val R0 = 2.0 + i * 0.5
+            val R0 = 3.0 + i * 0.5
             val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
             println("${R0} $pControl")
             data.add(Pair(R0, pControl))
@@ -145,7 +145,7 @@ class Experiments {
         val data = ArrayList<Pair<Double, Double>>()
 
         for (i in 0..6) {
-            trackingStrategy.householdProcessingTime = i * 0.5
+//            trackingStrategy.householdProcessingTime = i * 0.5
             trackingStrategy.workplaceProcessingTime = i * 0.5
             trackingStrategy.communityProcessingTime = i * 0.5
             val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
@@ -171,7 +171,7 @@ class Experiments {
 
         for (i in 1..6) {
             for(j in 0..5) {
-                trackingStrategy.householdProcessingTime = i * 0.5
+//                trackingStrategy.householdProcessingTime = i * 0.5
                 trackingStrategy.workplaceProcessingTime = i * 0.5
                 trackingStrategy.communityProcessingTime = i * 0.5
                 trackingStrategy.pTraceInCommunity = 0.5 + j*0.1
