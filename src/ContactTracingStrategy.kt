@@ -59,9 +59,7 @@ class ContactTracingStrategy(
             }
         }
         if (wouldTestPositive) {
-            if(agent.tracedVia !== agent.workplaceContacts) {
-                    sim.events.add(Event(sim.currentTime + workplaceProcessingTime, Event.Type.TRACEWORKPLACE, agent))
-            }
+            sim.events.add(Event(sim.currentTime + workplaceProcessingTime, Event.Type.TRACEWORKPLACE, agent))
             sim.events.add(Event(sim.currentTime + communityProcessingTime, Event.Type.TRACECOMMUNITY, agent))
         }
     }
