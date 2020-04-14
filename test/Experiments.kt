@@ -56,7 +56,6 @@ class Experiments {
             false,
             false,
             false,
-            true,
             false
         )
         InfectedAgent.pCompliant = 0.8
@@ -73,7 +72,6 @@ class Experiments {
             false,
             false,
             false,
-            true,
             false
         )
         InfectedAgent.pCompliant = 0.8
@@ -90,7 +88,6 @@ class Experiments {
             false,
             false,
             false,
-            true,
             true
         )
         InfectedAgent.pCompliant = 0.8
@@ -106,7 +103,6 @@ class Experiments {
             1.0,
             false,
             false,
-            true,
             true,
             false
         )
@@ -124,7 +120,37 @@ class Experiments {
             false,
             true,
             false,
+            false
+        )
+        InfectedAgent.pCompliant = 0.8
+        InfectedAgent.pForcedToIsolate = 0.0 // UK unemployment around 4%
+
+        contourR0TotalAsymptomatic(tracingStrategy)
+    }
+
+    @Test
+    fun WorkplaceSymptomMonitoring() {
+        val tracingStrategy = ContactTracingStrategy(
+            1.0,
+            false,
+            false,
+            false,
+            false
+        )
+        InfectedAgent.pCompliant = 0.8
+        InfectedAgent.pForcedToIsolate = 0.9 // UK unemployment around 4%
+
+        contourR0TotalAsymptomatic(tracingStrategy)
+    }
+
+
+    @Test
+    fun householdEnforcementWithWorkplaceSymptomMonitoring() {
+        val tracingStrategy = ContactTracingStrategy(
+            1.0,
+            false,
             true,
+            false,
             false
         )
         InfectedAgent.pCompliant = 0.8
@@ -139,7 +165,6 @@ class Experiments {
         val tracingStrategy = ContactTracingStrategy(
             1.0,
             false,
-            true,
             true,
             true,
             false
@@ -158,7 +183,6 @@ class Experiments {
             false,
             true,
             true,
-            true,
             false
         )
         InfectedAgent.pForcedToIsolate = 0.9
@@ -175,7 +199,6 @@ class Experiments {
             true,
             true,
             false,
-            true,
             false
         )
         InfectedAgent.pCompliant = 0.75
@@ -190,7 +213,7 @@ class Experiments {
 
     fun contourR0TotalAsymptomatic(trackingStrategy: ContactTracingStrategy) {
         InfectedAgent.pCompliant = 0.75
-        val nTrials = 300
+        val nTrials = 500
         val initialCases = 100
         val data = ArrayList<Triple<Double, Double, Double>>()
         val skews = listOf(100.0, 3.08, 1.38, 0.72, 0.32, 0.0)

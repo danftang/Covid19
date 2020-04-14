@@ -151,7 +151,6 @@ class InfectedAgent {
     }
 
 
-
     fun traceNonHouseholdContacts(enforceWorkplaceTracing: Boolean, enforceCommunityTracing: Boolean): Sequence<InfectedAgent> {
         var contacts = emptySequence<InfectedAgent>()
         if(enforceCommunityTracing) {

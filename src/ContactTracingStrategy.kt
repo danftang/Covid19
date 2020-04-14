@@ -9,7 +9,6 @@ class ContactTracingStrategy(
     val enforceCommunityTracing: Boolean,   // e.g. force people to install app
     val enforceHouseholdTracing: Boolean,   // are household members forced into quarantine
     val enforceWorkplaceTracing: Boolean,
-    val symptomaticsQuarantineHouseholdImmediately: Boolean,
     val traceSecondaryContacts: Boolean
 ) {
 
@@ -85,9 +84,9 @@ class ContactTracingStrategy(
         if(agent.tracedVia != null) return // don't trace agents we've already traced
         agent.tracedVia = tracedVia
         agent.quarantine()
-        if(symptomaticsQuarantineHouseholdImmediately && agent.tracedVia !== agent.household && agent.isSymptomatic(sim.currentTime)) {
-            agent.traceHoueholdContacts(enforceHouseholdTracing).forEach { reportPossibleCase(sim, it, agent.household) }
-        }
+//        if(enforceHouseholdTracing) agent.traceHoueholdContacts(true).forEach {
+//            reportPossibleCase(sim, it, agent.household)
+//        }
         doSwabTests(sim, agent)
     }
 
