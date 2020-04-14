@@ -14,7 +14,9 @@ class InfectedAgent {
         var nCommunity = 0
 
         var pCompliant: Double = 0.75
+        val pHasSmartPhone = 0.95 // 90% penetration but 95% prob that a person involved in a contact
         var pForcedToIsolate = 0.0
+        val pInfectedViaCloseContact = 0.9
 
         // This will be different for different countries
         // to be calibrated after the fact.
@@ -118,6 +120,7 @@ class InfectedAgent {
     val exposureTime: Double
     val isSubclinical: Boolean
     val isCompliant: Boolean
+    val hasSmartPhone: Boolean = Random.nextDouble() < pHasSmartPhone
     val household: Household
     val workplaceContacts: Workplace
     val communityContacts: Community
@@ -143,10 +146,33 @@ class InfectedAgent {
     }
 
 
+    fun traceHoueholdContacts(enforceTracing: Boolean) = household.asSequence().filter {
+        it !== this && (enforceTracing || it.isCompliant)
+    }
+
+
+
+    fun traceNonHouseholdContacts(enforceWorkplaceTracing: Boolean, enforceCommunityTracing: Boolean): Sequence<InfectedAgent> {
+        var contacts = emptySequence<InfectedAgent>()
+        if(enforceCommunityTracing) {
+            contacts += workplaceContacts.asSequence()
+        } else if(hasSmartPhone && isCompliant) {
+            contacts += communityContacts.asSequence().filter { it.hasSmartPhone && it.isCompliant }
+        }
+        if(enforceWorkplaceTracing) {
+            contacts += workplaceContacts.asSequence()
+        } else if(hasSmartPhone && isCompliant) {
+            contacts += workplaceContacts.asSequence().filter { it.hasSmartPhone && it.isCompliant }
+        }
+        return contacts
+    }
+
+
     fun quarantine() {
         isQuarantined = true
 //        eventQueue.clear()
     }
+
 
     fun infectiousness(time: Double) = infectiousness(time, onsetTime)
 
@@ -196,13 +222,13 @@ class InfectedAgent {
             0 -> if(Random.nextDouble() > pImmune) { // community transmission
                 nCommunity++
                 val newInfectedAgent = InfectedAgent(sim, communityContacts = Community(this))
-                communityContacts.add(newInfectedAgent)
+                if(Random.nextDouble() < pInfectedViaCloseContact) communityContacts.add(newInfectedAgent)
                 newInfectedAgent
             } else null
             1 -> if(Random.nextDouble() > pImmune) { // workplace transmission
                 nWork++
                 val newInfectedAgent = InfectedAgent(sim, workplaceContacts = Workplace(this))
-                workplaceContacts.add(newInfectedAgent)
+                if(Random.nextDouble() < pInfectedViaCloseContact) workplaceContacts.add(newInfectedAgent)
                 newInfectedAgent
             } else null
             else -> { // household transmission

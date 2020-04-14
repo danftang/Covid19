@@ -43,17 +43,17 @@ class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
                     contactTrace.initiateTrace(this, event.agent)
                 }
 
-                Event.Type.TRACEHOUSEHOLD -> {
-                    contactTrace.traceAgentsHousehold(this, event.agent)
-                }
-
-                Event.Type.TRACEWORKPLACE -> {
-                    contactTrace.traceAgentsWorkplace(this, event.agent)
-                }
-
-                Event.Type.TRACECOMMUNITY -> {
-                    contactTrace.traceAgentsCommunity(this, event.agent)
-                }
+//                Event.Type.TRACEHOUSEHOLD -> {
+//                    contactTrace.traceAgentsHousehold(this, event.agent)
+//                }
+//
+//                Event.Type.TRACEWORKPLACE -> {
+//                    contactTrace.traceAgentsWorkplace(this, event.agent)
+//                }
+//
+//                Event.Type.TRACECOMMUNITY -> {
+//                    contactTrace.traceAgentsCommunity(this, event.agent)
+//                }
 
                 else -> {
                     val nextEvent = event.agent.processNextEvent(this)
