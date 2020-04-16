@@ -3,11 +3,8 @@ class Event(val time: Double, val type: Type, val agent: InfectedAgent): Compara
     enum class Type {
         TRANSMIT,
         PCRTESTPOSITIVE,
-        TRACEHOUSEHOLD,
-        TRACEWORKPLACE,
-        TRACECOMMUNITY,
-        BECOMESYMPTOMATIC,
-        SELFISOLATE
+        PCRTESTNEGATIVE,
+        BECOMESYMPTOMATIC
     }
 
     override fun compareTo(other: Event): Int {

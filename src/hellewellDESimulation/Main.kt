@@ -11,7 +11,7 @@ fun main() {
         var nControlled = 0
         for(trial in 1..nTrials) {
             val sim = Simulation(pTraceContact, R0, pSubclinical)
-            for(i in 1..initialCases) sim.addUndetectedCase(Agent(sim))
+            for(j in 1..initialCases) sim.addUndetectedCase(Agent(sim))
             if(sim.run()) nControlled++
         }
         val pControl = nControlled.toDouble()/nTrials

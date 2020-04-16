@@ -4,7 +4,7 @@ import java.util.*
 // Hellewell et.al., 2020, Feasibility of controlling COVID-19 outbreaks by isolation of
 // cases and contacts. The Lancet, 8:e488-96
 // https://doi.org/10.1016/S2214-109X(20)30074-7
-class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
+class Simulation(val contactTrace: ContactTracingParams, val agentParams: AgentParams, val R0: Double) {
 
     val events = PriorityQueue<Event>()
     var currentTime = 0.0
@@ -14,7 +14,7 @@ class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
     fun monteCarloRun(nTrials: Int, nInitialCases: Int): Double {
         var nControlled = 0
         for (trial in 1..nTrials) {
-            for (i in 1..nInitialCases) addUndetectedCase(InfectedAgent(this))
+            for (i in 1..nInitialCases) InfectedAgent(this)
             if (run()) nControlled++
             reset()
         }
@@ -36,38 +36,8 @@ class Simulation(val contactTrace: ContactTracingStrategy, val R0: Double) {
         if(events.isNotEmpty()) {
             val event = events.poll()
             currentTime = event.time
-            when(event.type) {
-
-                Event.Type.PCRTESTPOSITIVE -> {
-                    event.agent.hasTestedPositive = true
-                    contactTrace.initiateTrace(this, event.agent)
-                }
-
-//                Event.Type.TRACEHOUSEHOLD -> {
-//                    contactTrace.traceAgentsHousehold(this, event.agent)
-//                }
-//
-//                Event.Type.TRACEWORKPLACE -> {
-//                    contactTrace.traceAgentsWorkplace(this, event.agent)
-//                }
-//
-//                Event.Type.TRACECOMMUNITY -> {
-//                    contactTrace.traceAgentsCommunity(this, event.agent)
-//                }
-
-                else -> {
-                    val nextEvent = event.agent.processNextEvent(this)
-                    if(nextEvent != null) events.add(nextEvent)
-                }
-            }
+            event.agent.processNextEvent(event)
         }
-    }
-
-
-    fun addUndetectedCase(agent: InfectedAgent) {
-        cumulativeCases++
-        val firstEvent = agent.peekNextEvent()
-        if(firstEvent != null) events.add(firstEvent)
     }
 
 

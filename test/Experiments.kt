@@ -3,216 +3,127 @@ import org.junit.Test
 import kotlin.math.roundToInt
 
 class Experiments {
-
-//    @Test
-//    fun manualContactTracing() {
-//        val tracingStrategy = ContactTracingStrategy(
-//            Double.NaN,Double.NaN,Double.NaN,
-//            true,
-//            true,
-//            true,
-//            true
-//        )
-//
-//        InfectedAgent.pCompliant = 0.75
-//        processingTimepTrackContour(tracingStrategy, 3.5)
-//    }
-
-//    @Test
-//    fun manualTraceWithWorkplaceEnforcement() {
-//        val trackingStrategy = ContactTracingStrategy(
-//            1.0, 0.5,
-//            Double.NaN,
-//            true,
-//            true,
-//            true,
-//            true
-//        )
-//        InfectedAgent.pCompliant = 0.75
-//        InfectedAgent.pForcedToIsolate = 0.9
-//        InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
-//        InfectedAgent.pSubclinical = 0.3
-//        val R0 = 3.5
-//        val nTrials = 300
-//        val initialCases = 100
-//        val data = ArrayList<Triple<Float, Float, Float>>()
-//
-//        for (i in 2..6) {
-//            for(j in 0..5) {
-//                trackingStrategy.communityProcessingTime = i * 0.5
-//                trackingStrategy.pTraceInCommunity = j*0.2
-//                val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-//                println("${trackingStrategy.communityProcessingTime} ${trackingStrategy.pTraceInCommunity} $pControl")
-//                data.add(Triple(trackingStrategy.communityProcessingTime.toFloat(), trackingStrategy.pTraceInCommunity.toFloat(), pControl.toFloat()))
-//            }
-//            println("")
-//        }
-//    }
-
     @Test
     fun baseline() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
+        val tracingStrategy = ContactTracingParams(
             false,
             false,
             false,
-            false
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.0
+        val agentParams = AgentParams(
+            pCompliant = 0.8
+        )
 
-        contourR0TotalAsymptomatic(tracingStrategy)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
-
     @Test
-    fun immediatePCR() {
-        val tracingStrategy = ContactTracingStrategy(
-            0.01,
+    fun WorkplaceSymptomMonitoring() {
+        val tracingStrategy = ContactTracingParams(
             false,
             false,
-            false,
-            false
+            true,
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.0
-
-        contourR0TotalAsymptomatic(tracingStrategy)
-    }
-
-
-    @Test
-    fun secondaryContactTracing() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
-            false,
-            false,
-            true
+        val agentParams = AgentParams(
+            pCompliant = 0.8
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.0
 
-        contourR0TotalAsymptomatic(tracingStrategy)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
 
     @Test
     fun workplaceEnforcement() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
+        val tracingStrategy = ContactTracingParams(
             false,
             true,
-            false
+            true,
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.9 // UK unemployment around 4%
+        val agentParams = AgentParams(
+            pCompliant = 0.8
+        )
 
-        contourR0TotalAsymptomatic(tracingStrategy)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
 
     @Test
     fun householdEnforcement() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
+        val tracingStrategy = ContactTracingParams(
             true,
             false,
-            false
+            false,
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.0 // UK unemployment around 4%
+        val agentParams = AgentParams(
+            pCompliant = 0.8
+        )
 
-        contourR0TotalAsymptomatic(tracingStrategy)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
-    @Test
-    fun WorkplaceSymptomMonitoring() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
-            false,
-            false,
-            false
-        )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.9 // UK unemployment around 4%
-
-        contourR0TotalAsymptomatic(tracingStrategy)
-    }
 
 
     @Test
     fun householdEnforcementWithWorkplaceSymptomMonitoring() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
+        val tracingStrategy = ContactTracingParams(
             true,
             false,
-            false
+            true,
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.9 // UK unemployment around 4%
+        val agentParams = AgentParams(
+            pCompliant = 0.8
+        )
 
-        contourR0TotalAsymptomatic(tracingStrategy)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
 
     @Test
     fun workplaceAndHouseholdEnforcement() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
+        val tracingStrategy = ContactTracingParams(
             true,
             true,
-            false
+            true,
+            0.02,
+            1.0
         )
-        InfectedAgent.pCompliant = 0.8
-        InfectedAgent.pForcedToIsolate = 0.9 // UK unemployment around 4%
-
-        contourR0TotalAsymptomatic(tracingStrategy)
-    }
-
-
-    @Test
-    fun phoneAppContactTracing() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            false,
-            true,
-            true,
-            false
+        val agentParams = AgentParams(
+            pCompliant = 0.8
         )
-        InfectedAgent.pForcedToIsolate = 0.9
-        InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
-        InfectedAgent.pSubclinical = 0.3
 
-        varyCompliance(tracingStrategy, 3.5)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
     @Test
-    fun phoneAppContactTracingR0() {
-        val tracingStrategy = ContactTracingStrategy(
-            1.0,
-            true,
-            true,
+    fun totalCompliance() {
+        val tracingStrategy = ContactTracingParams(
             false,
-            false
+            false,
+            false,
+            0.02,
+            0.85
         )
-        InfectedAgent.pCompliant = 0.75
-        InfectedAgent.pForcedToIsolate = 0.9
-        InfectedAgent.generationIntervalShape = 0.7 // 30% pre-symptomatic
-        InfectedAgent.pSubclinical = 0.3
+        val agentParams = AgentParams(
+            pCompliant = 1.0
+        )
 
-        varyR0(tracingStrategy)
-//        varyCompliance(tracingStrategy, 3.5)
+        contourR0TotalAsymptomatic(tracingStrategy, agentParams)
     }
 
 
-    fun contourR0TotalAsymptomatic(trackingStrategy: ContactTracingStrategy) {
-        InfectedAgent.pCompliant = 0.75
+
+
+    fun contourR0TotalAsymptomatic(trackingParams: ContactTracingParams, agentParams: AgentParams) {
         val nTrials = 500
         val initialCases = 100
         val data = ArrayList<Triple<Double, Double, Double>>()
@@ -222,15 +133,15 @@ class Experiments {
         for (i in 0..3) {
             for (j in 0..5) {
                 val R0 = 2.5 + i * 0.5
-                InfectedAgent.pSubclinical = j * 0.1
-                InfectedAgent.generationIntervalShape = skews[j]
+                agentParams.pSubclinical = j * 0.1
+                agentParams.generationIntervalShape = skews[j]
                 var pControl = 0.0
                 if (j < jMax) {
-                    pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
+                    pControl = Simulation(trackingParams, agentParams, R0).monteCarloRun(nTrials, initialCases)
                     if (pControl == 0.0) jMax = j
                 }
                 val x = (R0 * 1024.0).roundToInt() / 1024.0
-                val y = ((2.0*InfectedAgent.pSubclinical - InfectedAgent.pSubclinical*InfectedAgent.pSubclinical)* 1024.0).roundToInt() / 1024.0
+                val y = ((2.0*agentParams.pSubclinical - agentParams.pSubclinical*agentParams.pSubclinical)* 1024.0).roundToInt() / 1024.0
                 println("$x $y $pControl")
                 data.add(Triple(x, y, pControl))
             }
@@ -255,8 +166,7 @@ class Experiments {
         }
     }
 
-    fun contourAsymptomaticPreSymptomatic(trackingStrategy: ContactTracingStrategy, R0: Double) {
-        InfectedAgent.pCompliant = 0.75
+    fun contourAsymptomaticPreSymptomatic(trackingStrategy: ContactTracingParams, agentParams: AgentParams, R0: Double) {
         val nTrials = 300
         val initialCases = 100
         val data = ArrayList<Triple<Double, Double, Double>>()
@@ -265,14 +175,14 @@ class Experiments {
 
         for (i in 0..5) {
             for (j in 0..5) {
-                InfectedAgent.pSubclinical = i * 0.1
-                InfectedAgent.generationIntervalShape = skews[j]
+                agentParams.pSubclinical = i * 0.1
+                agentParams.generationIntervalShape = skews[j]
                 var pControl = 0.0
                 if (j < jMax) {
-                    pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
+                    pControl = Simulation(trackingStrategy, agentParams, R0).monteCarloRun(nTrials, initialCases)
                     if (pControl == 0.0) jMax = j
                 }
-                val x = (InfectedAgent.pSubclinical * 1024.0).roundToInt() / 1024.0
+                val x = (agentParams.pSubclinical * 1024.0).roundToInt() / 1024.0
                 val y = j * 0.1
                 println("$x $y $pControl")
                 data.add(Triple(x,y, pControl))
@@ -299,112 +209,5 @@ class Experiments {
     }
 
 
-    fun varyCompliance(trackingStrategy: ContactTracingStrategy, R0: Double) {
-        val nTrials = 1000
-        val initialCases = 100
-        val data = ArrayList<Pair<Double, Double>>()
 
-        for (i in 0..5) {
-            InfectedAgent.pCompliant = 0.5 + i * 0.1
-            val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-            println("${InfectedAgent.pCompliant} $pControl")
-            data.add(Pair(InfectedAgent.pCompliant, pControl))
-        }
-        gnuplot {
-            val plotData = heredoc(data)
-            invoke(
-                """
-            set xlabel "Proportion of population compliant"
-            set ylabel "Probability of control"
-            plot $plotData with lines notitle
-        """
-            )
-        }
-    }
-
-
-    fun varyR0(trackingStrategy: ContactTracingStrategy) {
-        val nTrials = 1000
-        val initialCases = 100
-        val data = ArrayList<Pair<Double, Double>>()
-
-        for (i in 0..5) {
-            val R0 = 3.5 + i * 0.5
-            val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-            println("${R0} $pControl")
-            data.add(Pair(R0, pControl))
-        }
-        gnuplot {
-            val plotData = heredoc(data)
-            invoke(
-                """
-            set xlabel "R0"
-            set ylabel "Probability of control"
-            plot $plotData with lines notitle
-        """
-            )
-        }
-    }
-
-
-//    fun varyProcessingTime(trackingStrategy: ContactTracingStrategy, R0: Double) {
-//        val nTrials = 300
-//        val initialCases = 100
-//        val data = ArrayList<Pair<Double, Double>>()
-//
-//        for (i in 0..6) {
-////            trackingStrategy.householdProcessingTime = i * 0.5
-//            trackingStrategy.workplaceProcessingTime = i * 0.5
-//            trackingStrategy.communityProcessingTime = i * 0.5
-//            val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-//            println("${trackingStrategy.communityProcessingTime} $pControl")
-//            data.add(Pair(trackingStrategy.communityProcessingTime, pControl))
-//        }
-//        gnuplot {
-//            val plotData = heredoc(data)
-//            invoke(
-//                """
-//            set xlabel "Tracking processing time"
-//            set ylabel "Probability of control"
-//            plot $plotData with lines notitle
-//        """
-//            )
-//        }
-//    }
-
-//    fun processingTimepTrackContour(trackingStrategy: ContactTracingStrategy, R0: Double) {
-//        val nTrials = 300
-//        val initialCases = 100
-//        val data = ArrayList<Triple<Float, Float, Float>>()
-//
-//        for (i in 1..6) {
-//            for(j in 0..5) {
-////                trackingStrategy.householdProcessingTime = i * 0.5
-//                trackingStrategy.workplaceProcessingTime = i * 0.5
-//                trackingStrategy.communityProcessingTime = i * 0.5
-//                trackingStrategy.pTraceInCommunity = 0.5 + j*0.1
-//                trackingStrategy.pTraceInWorkplace = 0.5 + j*0.1
-//                val pControl = Simulation(trackingStrategy, R0).monteCarloRun(nTrials, initialCases)
-//                println("${trackingStrategy.communityProcessingTime} ${trackingStrategy.pTraceInWorkplace} $pControl")
-//                data.add(Triple(trackingStrategy.communityProcessingTime.toFloat(), trackingStrategy.pTraceInWorkplace.toFloat(), pControl.toFloat()))
-//            }
-//            println("")
-//        }
-//        gnuplot {
-//            val plotData = heredoc(data, 6)
-//            invoke(
-//                """
-//                    set contour
-//                    unset surface
-//                    set view map
-//                    set cntrparam levels incremental 0.1,0.2,1.1
-//                    set key off
-//                    set xlabel 'First report to contact-isolation time (days)'
-//                    set ylabel 'Proportion of contacts traced'
-//                    set key outside
-//                    splot ${plotData} with lines title ""
-//                """
-//            )
-//        }
-//    }
 }

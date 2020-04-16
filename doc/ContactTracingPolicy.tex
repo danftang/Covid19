@@ -15,9 +15,9 @@
 \usepackage{listings}
 \usepackage{graphicx}
 \usepackage{subfig}
-\usepackage{apacite}
+%\usepackage{apacite}
 
-\title{Strategies for mobile-phone contact-tracing to eradicate SARS-CoV-2}
+\title{Policy interventions for eradication of SARS-CoV-2 by mobile-phone contact-tracing}
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
@@ -35,14 +35,13 @@
   %% Address \\
 }
 
-
 \begin{document}
 \maketitle
 
 \begin{abstract}
 With the recent announcement\cite{applegoogle} that Apple and Google will introduce a contact-tracing API to iOS and Android, and later add contact tracing functionality directly to their OS's, it seems increasingly likely that contact tracing via a smart phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after an initial outbreak.
-
-However, contact-tracing models have shown \cite{Ferrettieabb6936}\cite{hellewellfeasibility} that there remains a high degree of uncertainty over whether contact tracing alone will be enough to control the virus. Here, we suggest two complementary policies (household testing and workplace testing) that could be used as part of a responsive policy to increase the effectiveness of smart phone contact tracing in the event that a resurgence looks imminent.
+ 
+However, contact-tracing models have shown \cite{Ferrettieabb6936}\cite{hellewellfeasibility} that there remains a high degree of uncertainty over whether contact tracing alone will be enough to control the virus. Here, we suggest complementary policies that could be used as part of a responsive policy to increase the effectiveness of smart phone contact tracing in the event that a resurgence looks imminent.
 \end{abstract}
 
 % keywords can be removed
@@ -63,7 +62,7 @@ We describe four policy scenarios which could easily be implemented and demonstr
 
 For each scenario we calculated the probability that an initial population of 100 infected agents was eradicated. Eradication was deemed to have been achieved if the cumulative number of cases remained below 5000 and there was no untraced infected population at 15 weeks into the simulation. The probability of eradication was estimated by performing a Monte-Carlo run of 500 simulations and counting the proportion that achieved eradication.
 
-Although there is uncertainty in all the model parameters, sensitivity analysis of our model showed that the probability of eradication was very sensitive to $R0$ and to the total proportion of asymptomatic transmission (i.e. if $p_a$ is the proportion of asymptomatic carriers and $p_p$ is the proportion of pre-symptomatic transmission among people who eventually become symptomatic, then the total proportion of asymptomatic transmission is $p_p + p_a - p_pp_a$). So we show contour maps of the probability of eradication over the likely range of these values.
+Although there is uncertainty in all the model parameters, sensitivity analysis of our model showed that the probability of eradication was very sensitive to $R0$ and to the total proportion of asymptomatic transmission (i.e. if $p_a$ is the proportion of asymptomatic carriers and $p_p$ is the proportion of pre-symptomatic transmission among people who eventually become symptomatic, then the total proportion of asymptomatic transmission is $p_p + p_a - p_pp_a$). So we show contour maps of the probability of eradication over the likely range of these values. We found that the probability of control was \textbf{not} very sensitive to the ratio of asymptomatics to pre-symptomatics, so in the simulations we assumed that $p_a = p_p$.
 
 \subsection{Baseline scenario}
 
@@ -73,7 +72,7 @@ Anitgen tests are assumed to give an immediate result but 15\% of results will b
 
 Anyone testing positive on either antigen or PCR test who has a mobile phone with contact tracing enabled or contact tracing app installed, uses the app to alert all recorded close contacts. Close contacts will then be instructed to self isolate and take tests as above.
 
-We assume that, due to government advertising, take-up of the app among smart phone users is 80\% while 20\% of the population are assumed not to comply with either self-isolation or installation of the tracing app, even if they have a smart phone.  95\% of agents are assumed to have a smart phone (meaning 90\% of close contacts are between two agents that have a smart phone).
+We assume that, due to government advertising, take-up of the app among smart phone users is 80\%. 20\% of the population are assumed not to comply with either self-isolation or installation of the tracing app, even if they have a smart phone.  95\% of agents are assumed to have a smart phone (meaning 90\% of close contacts are between two agents that have a smart phone, as discussed in the introduction). These figures correspond to 58\% of contacts being traced.
 
 Figure \ref{baseline} shows the contour map of probability of eradication for this scenario for a range of $R0$ and total asymptomatic transmission. For almost all values, contact tracing is unlikely to prevent another outbreak.
 
@@ -133,14 +132,16 @@ Each transmission event occurs either in the household, at the workplace/school 
 
 The source code of the model is available at \href{https://github.com/danftang/Covid19}{https://github.com/danftang/Covid19}
 
-
 \section{Discussion}
 
 We have suggested a number of increasingly effective, but also increasingly draconian measures that could be used to improve the chances that contact tracing is successful in avoiding another resurgence of COVID-19. It is envisaged that the measures would be implemented in response to the evolving situation and only when absolutely necessary to avoid a resurgence. With all these measures in place, containment is likely, but if $R0$ and total asymptomatic transmission turns out to be very high further measures may be necessary. In this case, social distancing and public hygiene measures would need to be implemented in addition. Although some of the measures discussed here may seem authoritarian, they must be put in the context of the situation we face. Life with contact tracing will be very close to normal for the vast majority of the population and will be much less socially disruptive, and will impinge much less on personal freedoms, than a national lock-down.
 
 %\bibliographystyle{unsrtnat}
+\bibliographystyle{unsrturl}
+%\bibliographystyle{alpha}
+%\bibliographystyle{plainurl}
 %\bibliographystyle{apalike} 
-\bibliographystyle{apacite}
+%\bibliographystyle{apacite}
 \bibliography{references}
 
 \end{document}

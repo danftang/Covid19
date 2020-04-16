@@ -9,10 +9,11 @@ class TestDistributions {
 
     @Test
     fun testPreSymptomInfection() {
+        val agentParams = AgentParams()
         val N = 100000
         var nNeg = 0
         for(i in 1..N) {
-            val x = InfectedAgent.exposureToTransmissionTime(10.0)
+            val x = agentParams.exposureToTransmissionTime(10.0)
             if(x<10.0) nNeg++
         }
         println(nNeg.toDouble()/N)
@@ -45,9 +46,10 @@ class TestDistributions {
 
     @Test
     fun plotIntDistribution() {
+        val agentParams = AgentParams()
         val N = 100000
         val samples = IntArray(N) {
-            InfectedAgent.numberOfInfected(2.5, false)
+            agentParams.numberOfInfected(2.5, false)
         }
         val max = samples.max()?:0
         val min = samples.min()?:0
@@ -88,12 +90,13 @@ class TestDistributions {
 
     @Test
     fun testDistribution() {
+        val agentParams = AgentParams()
         val N = 100000
         var total = 0.0
         var totsq = 0.0
         var nNeg = 0
         for(i in 1..N) {
-            val x = InfectedAgent.exposureToTransmissionTime(10.0)
+            val x = agentParams.exposureToTransmissionTime(10.0)
             total += x
             totsq += x*x
             if(x < 10.0) nNeg++
