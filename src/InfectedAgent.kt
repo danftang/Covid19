@@ -19,7 +19,7 @@ class InfectedAgent {
 //    val workplace: Workplace
     val closeContacts = ArrayList<CloseContact>()
     var isQuarantined: Boolean = false
-    var testedRecently: Boolean = false
+    var isBeingTested: Boolean = false
     val now: Double
         get() = sim.currentTime
 
@@ -55,11 +55,11 @@ class InfectedAgent {
 
     fun testAndTrace(retestIfNegative: Boolean) {
         if(isQuarantined) return
-        if(!testedRecently) {
-            testedRecently = true
+        if(!isBeingTested) {
+            isBeingTested = true
 //            sim.events.add(Event(now + 0.5, Event.Type.NOTTESTEDRECENTLY, this))
+            isQuarantined = true
             if(antigenTestPositive()) {
-                isQuarantined = true
                 closeContacts.forEach {
                     it.contact.highRiskWarning()
                 }
@@ -72,11 +72,14 @@ class InfectedAgent {
                         if(it !== this) highRiskWarning()
                     }
                 }
+                isBeingTested = false
             } else if(retestIfNegative) {
                 // test again in a few days
                 sim.events.add(Event(now + 4.0, Event.Type.RETEST, this))
+            } else {
+                isQuarantined = false
+                isBeingTested = false
             }
-            testedRecently = false
         }
     }
 
@@ -116,7 +119,7 @@ class InfectedAgent {
             }
 
             Event.Type.NOTTESTEDRECENTLY -> {
-                testedRecently = false
+                isBeingTested = false
             }
 
             Event.Type.RETEST -> {

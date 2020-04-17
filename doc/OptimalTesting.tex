@@ -57,14 +57,28 @@ Each test has a financial cost $C_{Tn}$. We also attach a cost per day to isolat
 
 Given this information, what is the schedule of testing/isolation of person B that minimises the expected cost.
 
-We first need to calculate the probability distribution over B's exposure time. We assume that there is a constant rate of environmental infection (via surfaces etc.) $\rho_e$ per day, a prior probability of infection $P(i)$ and a probability of transmission given a close contact with an infected person $P(t|i)$. So, given that person B has had close contacts with people other than A at times $t_1...t_m$ ago and a close contact with A at time $t_A$ we have
+We first need to calculate the probability distribution over B's first exposure time. We assume that there is a constant rate of environmental infection (via surfaces etc.) $\rho_e$ per day, a prior probability of infection $P(i)$ and a probability of transmission given a close contact with an infected person $P(T|i)$. So, given that person B has had close contacts with people (including A) at times $C = \left<t_1...t_m\right>$ and the probability that the $j^{th}$ contact is infected is
 \[
-P_{exp}(t) = \rho_e + \sum_{k=1}^m \delta(t-t_k)P(t|i)P(i) + \delta(t-t_A)P(t|i)P_A(i)
+P_j(i) =
+\begin{cases}
+P_A(i) & \text{if }j=A \\
+P(i) & \text{otherwise}
+\end{cases}
 \]
-So, the probability of correctly identifying a positive case with test $n$ at time $t$ is given by
+then the probability of first contact from the beginning of the clinically relevant period, $t_0$ (say 21 days before contact with A if B is asymptomatic or 14 days before symptom onset if patient has had clinical onset), is given by
 \[
-P_{nt}(+|i) = \int P_n(+|i,t-t_e)P_{exp}(t_e) dt_e
+P_{exp}(t|C) = \left(\rho_e + \sum_{k=1}^m \delta(t-t_k)P(T|i)P_k(i)\prod_{l=1}^{k-1}\left(P_l(\bar{i}) + P(\bar{T}|i)P_l(i)\right)\right)e^{-\rho_e(t-t_0)} 
 \]
+
+[Prior probability of Pexp given symptom onset time or absence of symptom onset, or treat observation of symptoms as a test?]
+[Probability of immunity]
+[Probability of asymptomatic]
+
+So, the sensitivity of test $n$ at time $t$ given a set of close contacts is given by
+\[
+P_{nt}(+|i,C) = \int P_n(+|i,t-t_e)P_{exp}(t_e|C) dt_e
+\]
+
 
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{unsrturl}

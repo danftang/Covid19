@@ -10,7 +10,7 @@ class Experiments {
             false,
             false,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
@@ -26,7 +26,7 @@ class Experiments {
             false,
             true,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
@@ -43,7 +43,7 @@ class Experiments {
             true,
             true,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
@@ -60,7 +60,7 @@ class Experiments {
             false,
             false,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
@@ -78,7 +78,7 @@ class Experiments {
             false,
             true,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
@@ -95,7 +95,7 @@ class Experiments {
             true,
             true,
             0.02,
-            1.0
+            0.85
         )
         val agentParams = AgentParams(
             pCompliant = 0.8
