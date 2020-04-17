@@ -16,20 +16,21 @@ class InfectedAgent {
     val isUnemployed: Boolean
     val hasSmartPhone: Boolean
     val household: Household
-    val workplace: Workplace
+//    val workplace: Workplace
     val closeContacts = ArrayList<CloseContact>()
     var isQuarantined: Boolean = false
+    var testedRecently: Boolean = false
     val now: Double
         get() = sim.currentTime
 
-    constructor(sim: Simulation, household: Household = Household(), workplace: Workplace = Workplace()) {
+    constructor(sim: Simulation, household: Household = Household(), infectedAtWork: Boolean = false) {
         this.sim = sim
         this.household = household
-        this.workplace = workplace
+//        this.workplace = workplace
         hasSmartPhone =  Random.nextDouble() < sim.agentParams.pHasSmartPhone
-        isUnemployed = Random.nextDouble() < sim.agentParams.pUnemployed
+        isUnemployed = if(infectedAtWork) false else Random.nextDouble() < sim.agentParams.pUnemployed
         household.add(this)
-        workplace.add(this)
+//        workplace.add(this)
         val incubationPeriod = sim.agentParams.incubationTime()
         exposureTime = sim.currentTime
         onsetTime = exposureTime + incubationPeriod
@@ -48,20 +49,34 @@ class InfectedAgent {
     fun highRiskWarning() {
         if(isQuarantined) return
         if(isCompliant || (!isUnemployed && sim.contactTrace.enforceWorkplaceTracingAndTesting)) {
-            testAndTrace()
+            testAndTrace(true)
         }
     }
 
-    fun testAndTrace() {
+    fun testAndTrace(retestIfNegative: Boolean) {
         if(isQuarantined) return
-        if(antigenTestPositive()) {
-            isQuarantined = true
-            closeContacts.forEach {
-                it.contact.highRiskWarning()
+        if(!testedRecently) {
+            testedRecently = true
+//            sim.events.add(Event(now + 0.5, Event.Type.NOTTESTEDRECENTLY, this))
+            if(antigenTestPositive()) {
+                isQuarantined = true
+                closeContacts.forEach {
+                    it.contact.highRiskWarning()
+                }
+                if(sim.contactTrace.enforceHouseholdTesting) {
+                    household.forEach {
+                        if(it !== this) it.testAndTrace(true)
+                    }
+                } else {
+                    household.forEach {
+                        if(it !== this) highRiskWarning()
+                    }
+                }
+            } else if(retestIfNegative) {
+                // test again in a few days
+                sim.events.add(Event(now + 4.0, Event.Type.RETEST, this))
             }
-            if(sim.contactTrace.enforceHouseholdTesting) household.forEach {
-                if(!it.isCompliant && it !==this) it.testAndTrace()
-            }
+            testedRecently = false
         }
     }
 
@@ -88,7 +103,7 @@ class InfectedAgent {
                 // TODO: What to do when you become symptomatic while in quarrantine?
                 if(!isQuarantined) {
                     if (isCompliant || (!isUnemployed && sim.contactTrace.workplaceSymptomMonitoring)) {
-                        testAndTrace()
+                        testAndTrace(true)
                     }
                 }
 //                if (isCompliant || (Random.nextDouble() < pForcedToIsolate)) {
@@ -100,6 +115,14 @@ class InfectedAgent {
 //                }
             }
 
+            Event.Type.NOTTESTEDRECENTLY -> {
+                testedRecently = false
+            }
+
+            Event.Type.RETEST -> {
+                testAndTrace(false)
+            }
+
             else -> throw(IllegalStateException("Unrecognized event"))
         }
     }
@@ -108,11 +131,12 @@ class InfectedAgent {
     fun transmitInfection() {
         val homeWeight = household.nUninfected() * sim.agentParams.familyMemberInteractionWeight
         val totalWeight = homeWeight + 2.0
-        val choice = Random.nextDouble(0.0, totalWeight).toInt()
+        var choice = Random.nextDouble(0.0, totalWeight).toInt()
+        if(isUnemployed && choice == 1) choice = 0
         when(choice) {
             0 -> if(Random.nextDouble() > sim.agentParams.pImmune) { // community transmission
                 nCommunity++
-                val newInfectedAgent = InfectedAgent(sim)
+                val newInfectedAgent = InfectedAgent(sim, infectedAtWork = false)
                 if(canSmartPhoneTrace(newInfectedAgent) && infectViaCloseContact()) {
                     recordCloseContact(newInfectedAgent)
                     newInfectedAgent.recordCloseContact(this)
@@ -120,7 +144,7 @@ class InfectedAgent {
             }
             1 -> if(Random.nextDouble() > sim.agentParams.pImmune) { // workplace transmission
                 nWork++
-                val newInfectedAgent = InfectedAgent(sim, workplace = this.workplace)
+                val newInfectedAgent = InfectedAgent(sim, infectedAtWork = true)
                 if((sim.contactTrace.enforceWorkplaceTracingAndTesting || canSmartPhoneTrace(newInfectedAgent)) && infectViaCloseContact()) {
                     recordCloseContact(newInfectedAgent)
                     newInfectedAgent.recordCloseContact(this)
@@ -128,9 +152,10 @@ class InfectedAgent {
             }
             else -> { // household transmission
                 nHome++
-                val newInfectedAgent = InfectedAgent(sim, household = this.household)
-                if(newInfectedAgent.isCompliant)  recordCloseContact(newInfectedAgent)
-                if(isCompliant) newInfectedAgent.recordCloseContact(this)
+                val newInfectedAgent = InfectedAgent(sim, household = this.household, infectedAtWork = false)
+                // Household automatically classed as close contacts
+//                if(newInfectedAgent.isCompliant)  recordCloseContact(newInfectedAgent)
+//                if(isCompliant) newInfectedAgent.recordCloseContact(this)
             }
         }
     }
@@ -140,11 +165,11 @@ class InfectedAgent {
     fun infectViaCloseContact() = Random.nextDouble() < sim.agentParams.pInfectedViaCloseContact
 
     fun antigenTestPositive(): Boolean {
-        return virusIsDetectable() && Random.nextDouble() < sim.contactTrace.pAntigenPositive
+        return virusIsDetectable() && (Random.nextDouble() < sim.contactTrace.pAntigenPositive)
     }
 
 
-    fun virusIsDetectable() = infectiousness() > sim.contactTrace.testLimitOfDetection || now > onsetTime
+    fun virusIsDetectable() = (infectiousness() > sim.contactTrace.testLimitOfDetection) || (now > onsetTime)
 
     // Testing strategy stuff
 

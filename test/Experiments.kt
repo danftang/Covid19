@@ -131,7 +131,7 @@ class Experiments {
         var jMax = 6
 
         for (i in 0..3) {
-            for (j in 0..5) {
+            for (j in 0..4) {
                 val R0 = 2.5 + i * 0.5
                 agentParams.pSubclinical = j * 0.1
                 agentParams.generationIntervalShape = skews[j]
@@ -141,7 +141,7 @@ class Experiments {
                     if (pControl == 0.0) jMax = j
                 }
                 val x = (R0 * 1024.0).roundToInt() / 1024.0
-                val y = ((2.0*agentParams.pSubclinical - agentParams.pSubclinical*agentParams.pSubclinical)* 1024.0).roundToInt() / 1024.0
+                val y = ((agentParams.pSubclinical + agentParams.pSubclinical*agentParams.subclinicalInfectiveness - agentParams.pSubclinical*agentParams.pSubclinical*agentParams.subclinicalInfectiveness)* 1024.0).roundToInt() / 1024.0
                 println("$x $y $pControl")
                 data.add(Triple(x, y, pControl))
             }
@@ -149,7 +149,7 @@ class Experiments {
         }
 
         gnuplot {
-            val plotData = heredoc(data, 6)
+            val plotData = heredoc(data, 5)
             invoke(
                 """
                     set contour

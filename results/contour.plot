@@ -6,4 +6,4 @@ set key off
 set xlabel 'R0'
 set ylabel 'Proportion of transmission asymptomatic'
 set key outside
-splot "secondaryContactTracing.dat" with lines title ""
+splot "baseline.dat" with lines title ""

@@ -4,7 +4,9 @@ class Event(val time: Double, val type: Type, val agent: InfectedAgent): Compara
         TRANSMIT,
         PCRTESTPOSITIVE,
         PCRTESTNEGATIVE,
-        BECOMESYMPTOMATIC
+        BECOMESYMPTOMATIC,
+        NOTTESTEDRECENTLY,
+        RETEST
     }
 
     override fun compareTo(other: Event): Int {

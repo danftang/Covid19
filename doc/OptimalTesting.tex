@@ -1,0 +1,77 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{amssymb,amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+%\usepackage{apacite}
+
+\title{Optimal testing schedule for mobile-phone contact-tracing}
+
+%\date{September 9, 1985}	% Here you can change the date presented in the paper title
+%\date{} 					% Or removing it
+
+\author{
+  Daniel Tang\\
+  Leeds Institute for Data Analytics\thanks{This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No. 757455)}\\
+  University of Leeds\\
+  Leeds, UK\\
+  \texttt{D.Tang@leeds.ac.uk} \\
+  %% examples of more authors
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+With the recent announcement\cite{applegoogle} that Apple and Google will introduce a contact-tracing API to iOS and Android, and later add contact tracing functionality directly to their OS's, it seems increasingly likely that contact tracing via a smart phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after an initial outbreak.
+
+In this paper we develop an optimal testing schedule 
+\end{abstract}
+
+% keywords can be removed
+\keywords{COVID-19, SARS-CoV-2}
+
+Suppose we have a number of tests $1...n$ that give us information about whether a person is infected with a disease. The characteristics of the $n^{th}$ test are defined by it's specificity, $P_n(-|\bar{i})$, which gives the probability that a non-infected person will test negative if tested with test $n$ , and it's sensitivity $P_n(+|i,\Delta t)$ which gives the probability that a person infected due to an exposure at a time $\Delta t$ before the test will test positive if tested with test $n$.
+
+Suppose the tests are used in the context of contact tracing and we assess the probability that person A is infected as $P_A(i)$. Suppose person B has been identified as having had a close contact with person A at a time $\Delta t$ ago.
+
+We don't know whether A infected B or B infected A. We know B's other close contacts.
+
+Each test has a financial cost $C_{Tn}$. We also attach a cost per day to isolating a person $C_I$ and a cost per day of allowing an infected person to be not isolated $C_{\bar{I}|i}$.
+
+Given this information, what is the schedule of testing/isolation of person B that minimises the expected cost.
+
+We first need to calculate the probability distribution over B's exposure time. We assume that there is a constant rate of environmental infection (via surfaces etc.) $\rho_e$ per day, a prior probability of infection $P(i)$ and a probability of transmission given a close contact with an infected person $P(t|i)$. So, given that person B has had close contacts with people other than A at times $t_1...t_m$ ago and a close contact with A at time $t_A$ we have
+\[
+P_{exp}(t) = \rho_e + \sum_{k=1}^m \delta(t-t_k)P(t|i)P(i) + \delta(t-t_A)P(t|i)P_A(i)
+\]
+So, the probability of correctly identifying a positive case with test $n$ at time $t$ is given by
+\[
+P_{nt}(+|i) = \int P_n(+|i,t-t_e)P_{exp}(t_e) dt_e
+\]
+
+%\bibliographystyle{unsrtnat}
+\bibliographystyle{unsrturl}
+%\bibliographystyle{alpha}
+%\bibliographystyle{plainurl}
+%\bibliographystyle{apalike} 
+%\bibliographystyle{apacite}
+\bibliography{references}
+
+\end{document}
