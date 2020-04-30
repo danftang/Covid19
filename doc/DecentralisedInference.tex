@@ -40,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-With the recent announcement of Apple and Google's partnership to introduce a contact-tracing functionality to iOS and Android, it seems increasingly likely that contact tracing via a smart-phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after an initial outbreak.
+With the announcement of Apple and Google's partnership to introduce a contact-tracing functionality to iOS and Android, it seems increasingly likely that contact tracing via a smart-phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after the initial outbreak.
 
 When deciding whether a person should be isolated, tested or released, information about test results and symptoms of that person's contacts can help inform the decision. However, the privacy preserving nature of the Apple/Google contact tracing algorithm means that centralised curation of these decisions is not possible. Here we present a decentralised algorithm that estimates the posterior probability of viral transmission events and evaluates a user's risk rating while preserving user privacy. The algorithm is a message passing algorithm, so each smart-phone can be used to execute a small part of the algorithm without releasing any sensitive information. In this way, the network of all participating smart-phones forms a distributed computation device that performs Bayesian inference and informs each user when they should start/end isolation or be tested. 
 
@@ -51,32 +51,32 @@ When deciding whether a person should be isolated, tested or released, informati
 
 \section{Description of the problem}
 
-Suppose we have a society where mobile-phone contact tracing is in operation. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from a daily exposure key. The phones remember the PIDs along with the time of the contact. If anyone tests positive for SARS-CoV-2, a subset of their daily exposure keys are published on a public server.
+Suppose we have a society where mobile-phone contact tracing is in operation. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from a daily exposure key. The phones keep a log of the PIDs along with the time of the contact and the daily exposure keys. If anyone tests positive for SARS-CoV-2, a subset of their daily exposure keys are published on a public server. Each day, everyone's phone checks for newly published exposure keys and must assess their risk of exposure and decide whether to raise an alarm telling the user to self-isolate and arrange a test.
 
-Each day, everyone's phone checks for newly published exposure keys and must decide whether to alarm the user to self-isolate and arrange a test. How should the phone calculate whether to alert the user?
+The problem we consider here is how to calculate whether to raise an alarm/perform a test while maintaining a users privacy about the nature of their close contacts.
 
 
 \section{Expressing the joint probability over transmission events}
 %==============================================================================
 
-If two people, A and B, are in close contact and broadcast PIDs $a$ and $b$ respectively, then there is a chance $P(\tau_{a \rightarrow b})$ that A will transmit the virus to B and a probability $P(\tau_{b \rightarrow a})$ that B will transmit the virus to A. Our aim is to calculate the marginal posterior probabilities of these events, given all the tests/observations that have been done on all people to date. When we talk about transmission here, we mean the movement of vital viral material from one person to another such that if the other person was susceptible, they would become infected. Transmission to an already infected person is still a transmission event, but has no effect.
+If two people, A and B, are in close contact and broadcast PIDs $a$ and $b$ respectively, then there is a chance $P(\tau_{a \rightarrow b})$ that A will transmit the virus to B and a chance $P(\tau_{b \rightarrow a})$ that B will transmit the virus to A. Our aim is to calculate the marginal posterior probabilities of these events, given all the tests/observations that have been done on all people to date. When we talk about transmission, we mean the movement of vital viral material from one person to another such that if the other person was susceptible, they would become infected. Transmission to an already infected person is still a transmission event, but has no effect.
 
-So, at any time, each smart-phone, $i$, has a log of close-contacts $C_i = \left<c_{i1}...c_{im}\right>$, where each $c_{ij} = \left<t_{ij}, a_{ij},b_{ij}\right>$, $t_{ij}$ is the time of the contact, $a_{ij}$ is the PID that user $i$ broadcast at time $t_{ij}$ and $b_{ij}$ is the PID broadcast by the other participant.
+So, at a time $t$, each smart-phone, $i$, has a log of close-contacts $C_i(t) = \left<c_{i1}...c_{im}\right>$, where each $c_{ij} = \left<t_{ij}, a_{ij},b_{ij}\right>$, $t_{ij}$ is the time of the contact, $a_{ij}$ is the PID that user $i$ broadcast at time $t_{ij}$ and $b_{ij}$ is the PID broadcast by the other participant.
 
-The binary random variables $\tau_{a_{ij}\rightarrow b_{ij}}$ take values either 1 or 0. A value of 1 denotes the event that a transmission occurred from the user who broadcast $a_{ij}$ (i.e. user $i$) to the user who broadcast PID $b_{ij}$. A value of 0 denotes the event that no they had a close contact but no transmission occurred.
+The binary random variables $\tau_{a_{ij}\rightarrow b_{ij}}$ take values either 1 or 0. A value of 1 denotes the event that a transmission occurred from the user who broadcast $a_{ij}$ (i.e. user $i$) to the user who broadcast PID $b_{ij}$. A value of 0 denotes the event that no they had a close contact but no transmission occurred in that direction.
 
-When a contact first occurs, the user has no information about the other participant so the probability of transmission from other is set to a prior probability. Up-to-date regional prior probabilities can be downloaded from publicly available servers and the phone can estimate its current region from the name/ID of the most recently connected cell tower (this information will always stay local on the phone).
+When a contact first occurs, the user has no information about the other participant so the probability of transmission from others is set to a prior probability. Up-to-date regional prior probabilities can be downloaded from publicly available servers and the phone can estimate its current region from the name/ID of the most recently connected cell tower (this information will always stay local on the phone).
 
 \subsection{Conditional probability of transmission}
 %===================================================
 
 If person A has a close contact at time $t$, what is the probability that they will transmit the virus to the other participant given that their log of close contacts from the start of the log at $t=0$ up to time $t$ is $C(t) = \left< t_{1},a_1,b_1 \right> ... \left< t_{n},a_n,b_n \right>$?
 
-Define the \textit{first-exposure time} to be the earliest time that A was exposed to the virus and let $\epsilon(t)$ be the event that the first exposure of person A is at time $t$. We assume that there is a constant rate, $\rho$, of exposure from the environment (e.g. from surfaces or close contacts that were missed for any reason). Given this, then the probability density of first exposure since the start of the log is
+Define the \textit{first-exposure time} to be the earliest time that A was exposed to the virus and let $\epsilon(t)$ be the event that the first exposure is at time $t$. We assume that there is a constant rate, $\rho$, of exposure from the environment (e.g. from surfaces or close contacts that were missed for any reason). Given this, then the probability density of first exposure since the start of the log is
 \[
 P\left(\epsilon(t)|C(t)\right) = \left(\rho + \sum_{i=1}^n \delta(t - t_i)\tau_{a_i\rightarrow b_i} \prod_{j<i}(1-\tau_{a_j\rightarrow b_j})\right) e^{-\rho t}
 \] 
-Define the \textit{disease onset time} to be the earliest time that an infected person has a non-zero probability of transmitting the disease and let $\delta_A(t)$ be the event that the disease onset of person A is at time $t$. If we assume that there was no infection at the start of the contact log then
+Define the \textit{disease onset time} to be the earliest time that an infected person has a non-zero probability of transmitting the disease and let $\delta(t)$ be the event that disease onset occurs at time $t$. If we assume that there was no infection at the start of the contact log then
 \[
 P(\delta(t)|C(t)) = \int_0^{t} P(\delta(t)|\epsilon(t_\epsilon))P(\epsilon(t_\epsilon)|C(t)) dt_\epsilon
 \]
@@ -93,11 +93,11 @@ Given a person's infectiousness, we assume that a close contact is a Bernoulli d
 P(\tau(t)|\iota(t)) = B(\tau(t), \iota(t))
 \]
 
-Suppose we have a number of tests $\xi_1...\xi_n$ that give us information about whether a person is infected with SARS-CoV-2. The characteristics of the $n^{th}$ test are defined by it's specificity, $P(\xi^-_n|\bar{i})$, which gives the probability that a person will test negative if tested with test $n$ given that they are not infected, and it's sensitivity $P(\xi^+_n(t)|\delta(t_\delta))$ which gives the probability that a person tests positive on test $n$ at time $t$ given that they had disease onset at time $t_\delta$.
+Suppose we have a number of tests $\xi_1...\xi_n$ that give us information about whether a person is infected with SARS-CoV-2. The characteristics of the $n^{th}$ test are defined by it's specificity, $P(\xi^-_n|\bar{i})$, which gives the probability that a person will test negative on test $n$ given that they are not infected, and it's sensitivity $P(\xi^+_n(t)|\delta(t_\delta))$ which gives the probability that a person tests positive on test $n$ at time $t$ given that they had disease onset at time $t_\delta$.
 
 Tests may take the form of clinical tests (e.g. PCR tests, antigen tests or antibody tests) but may also be simple observations of the presence or absence of symptoms (e.g. fever, persistent-cough or loss of taste).
 
-The probability of a positive test result is given by
+The conditional probability of a positive test result is given by
 \[
 P(\xi^+_n(t)|C(t)) = \int_0^t P(\xi^+_n(t)|\delta(t_\delta))P(\delta(t_\delta)|C(t)) dt_\delta + \left(1-\int_0^tP(\delta(t_\delta)|C(t)) dt_\delta\right)(1-P(\xi^-_n|\bar{i}))
 \]
@@ -105,7 +105,9 @@ P(\xi^+_n(t)|C(t)) = \int_0^t P(\xi^+_n(t)|\delta(t_\delta))P(\delta(t_\delta)|C
 \subsection{The joint probabilities}
 %====================================
 
-The probability that a contact with a person at time $t$ ends in a transmission event from that person depends only on the transmission events to that person before $t$, so we can imagine building up the joint from conditionals starting with the earliest contact and moving one at a time to the latest. If we suppose that each transmission event is an independent Bernoulli draw based on how infectious the person is, then if we let $\mathcal{C}$ be the set of all transmission events, it can be seen that the joint probability is given by
+The above conditional probabilities for each individual can be put together to create the joint probability over all people.
+
+The probability that a contact with a person at time $t$ ends in a transmission event from that person depends only on the transmission events to that person before $t$, so we can imagine building up the joint from conditionals starting with the earliest contact and moving one at a time to the latest. If we let $\mathcal{C}$ be the set of all transmission events for all people, it can be seen that the joint probability is given by
 \[
 P(\mathcal{C}) =
 \prod_{\tau_{a\rightarrow b}(t) \in \mathcal{C}}
@@ -131,7 +133,7 @@ P\left(\tau_{a\rightarrow b}(t)|
 \right)
 \]
 
-If we note that the probability of a positive/negative test result also depends only on the contacts prior to the test then we can also add test results to the joint. If $\xi_{n}(t)$ denotes the event of taking test $n$ at time $t$ and $T_i$ is the set of tests taken by user $i$, the joint becomes
+If we note that the probability of a positive/negative test result also depends only on the contacts prior to the test then we can also add test results to the joint. If $T_i$ is the set of tests taken by user $i$, the joint becomes
 
 \begin{equation}
 P(C_1...C_N, T_1...T_N) =
@@ -160,7 +162,7 @@ P(\xi_{n}(t)|\mathcal{L}(C_i,a,t))
 \section{Calculating posterior marginal probabilities of transmission events}
 %============================================================================
 
-We can now calculate the posterior marginal probabilities of all transmission events, given all the test results. We do this by embedding the joint in a cluster graph and performing belief propagation. We choose to use $N$ clusters, one for each user, where the $i^{th}$ cluster is given by
+We can now calculate the posterior marginal probabilities of all transmission events, given all the test results. We do this by embedding the joint in a cluster graph and performing belief propagation. We start with $N$ clusters, one for each user, where the $i^{th}$ cluster is given by
 \begin{equation}
 \Phi_i(C_i, T_i) =
 \prod_{\left< t,a,b, \iota \right> \in C_i}
@@ -173,41 +175,46 @@ We separate out the Bernoulli terms into their own clusters
 \begin{equation}
 \Phi_{Bi}(\left<t,a,b,\iota\right>) = B(\tau_{a\rightarrow b}(t)|\iota)
 \end{equation}
-in this way, we end up with a Bethe cluster graph which has very good properties for performing belief propagation.
+in this way, we end up with a Bethe cluster graph which has very good properties for performing belief propagation, so we would expect belief propagation to perform well on this graph both in term of the accuracy of the results and the number of messages passed.
+
+Given the cluster graph, belief propagation calculates the marginal probability of each cluster. The marginals can be conditioned on the results of all tests by simply setting the values of each test when calculating the messages to pass.
 
 \subsection{Passing of messages}
 
-Suppose that the $i^{th}$ phone is responsible for clusters $\Phi_i(C_i,T_i)$ and the associated onward transmission Bernoulli clusters $\Phi_{Bi}(c)$ for all $c\in C_i$. There are two types of message that need to be sent from phone $i$: ``forward'' messages from the phone's Bernoulli clusters and ``backward'' messages to the Bernoulli clusters on other phones. Since both types of messages concern singleton binary variables, the messages themselves can be encoded as a single number (e.g. the probability of being true).
+We now describe how belief propagation can be achieved on the network of mobile phones, without the need to expose any sensitive information.
 
-If any messages exceed a threshold value it becomes worthwhile sending them, and so the information is packaged up with the daily exposure key in use at the time of the contact, and published for other mobiles to download. Any mobile with a PID in its log that can be derived from the daily exposure key will inspect the packaged information and thereby receive messages.
+Suppose that the $i^{th}$ phone is responsible for clusters $\Phi_i(C_i,T_i)$ and the associated onward transmission Bernoulli clusters $\Phi_{Bi}(c)$ for all $c\in C_i$. There are two types of message that need to be sent from phone $i$: ``forward'' messages from the phone's Bernoulli clusters to the $\Phi$ clusters of other phones, and ``backward'' messages from the phone's $\Phi_i(C_i,T_i)$ cluster to the Bernoulli clusters on other phones.
+
+Messages are sent whenever the information contained within them exceeds a threshold value. Information is transferred between phones by sending a data payload when a daily exposure key is published. The payload is received by any mobile with a PID in its log that can be derived from the exposure key.
 
 However, a daily exposure key will match all contacts in a given day, but in order to implement belief propagation we need to send different messages to different contacts on the same day. So how do we deliver messages to a specific contact?
 
 For forward messages we publish the phone's current belief in the posterior marginal infectiousness distribution for the day of the exposure key (under the approximation that the infectiousness of the person was constant over that period). From this single distribution all contacts can calculate their own forward messages.
 
-To see this, suppose the posterior infectiousness distribution is given by $\Phi_i(\iota)$. Consider now one of the Bernoulli clusters for this day. If there have been no backward messages, the forward message from the Bernoulli cluster will be equal to
+To see this, suppose the posterior infectiousness distribution is given by $\Phi_i(\iota)$, this is known to phone $i$. Consider now one of the same phone's Bernoulli clusters for this day. If there have been no backward messages, the forward message from the Bernoulli cluster to the other phone's $\Phi$ cluster will be equal to
 \[
 \int B(\tau_{a\rightarrow b}(t)|\iota)\Phi_i(\iota) d\iota = \int \iota\Phi(\iota) d\iota
 \]
-If on the other hand a backwards message, $\delta_b$, has been sent into the Bernoulli cluster, we need to remove the effect of this backward message before calculating the forward message. The backward message to the Bernoulli cluster would create an onward backward message to $\Phi_i(\iota)$ of
+If on the other hand a backwards message, $\delta'$, has been sent into the Bernoulli cluster, we need to remove the effect of this backward message before calculating the forward message. The backward message to the Bernoulli cluster would create an onward backward message from the Bernoulli cluster to $\Phi_i(\iota)$ of
 \[
-\delta_b\iota + (1-\delta_b)(1-\iota) = (1 - \delta_b) + (2\delta_b - 1)\iota
+\delta'\iota + (1-\delta')(1-\iota) = (1 - \delta') + (2\delta' - 1)\iota
 \]
-So, the posterior belief about $\iota$ is
+So, the posterior belief about $\iota$ becomes
 \[
-\Phi_i(\iota) = ((1 - \delta_b) + (2\delta_b - 1)\iota)\Phi'_i(\iota)
+\Phi_i(\iota) = ((1 - \delta') + (2\delta' - 1)\iota)\Phi'_i(\iota)
 \]
-where $\Phi'_i(\iota)$ is the belief with the backward message removed. The correct forward message from the Bernoulli cluster is then given by
-\[
-\delta_f = \int i \Phi'_i(\iota) d\iota = \int \frac{\Phi_i(\iota)}{(1 - \delta_b) + (2\delta_b - 1)\iota} d\iota
-\]
-but since the receiving phone knows the value of $\delta_b$, the backward message it sent, it can reconstruct the correct forward message from the Bernoulli cluster given only $\Phi_i(\iota)$.
+where $\Phi'_i(\iota)$ is the belief with the backward message removed. So, the correct forward message from the Bernoulli cluster is
+\begin{equation}
+\delta_f = \int i \Phi'_i(\iota) d\iota = \int \frac{\Phi_i(\iota)}{(1 - \delta') + (2\delta' - 1)\iota} d\iota
+\label{forwardMessage}
+\end{equation}
+but since the receiving phone knows the value of $\delta'$ (i.e. the backward message it sent) it can reconstruct the correct forward message from the Bernoulli cluster given only $\Phi_i(\iota)$.
 
-To reduce message load further, we suggest using an approximation to $\Phi_i(\iota)$ when published, for example the coefficients of a fourth order Bernstein polynomial.
+So, if phone $i$ publishes a parameterised version of $\Phi_i(\iota)$ along with a daily exposure key, all contacts for that day can derive their individual forward messages. We suggest publishing $\Phi_i(\iota)$ in terms of its first $n$ moments. By taking the Taylor expansion of equation \ref{forwardMessage} about $\delta' = 0.5$, the forward message can be expressed as a series in the moments of $\Phi_i(\iota)$.
 
 There is a similar problem with backward messages if we wish to publish them with the user's daily exposure key; different backward messages would need to be sent to contacts that happened on the same day.
 
-However, suppose we add another cluster between the incoming transmission edges and the $\Phi_i(C_i,T_i)$ cluster. The new cluster aggregates all incoming transmission edges for one day into a single effective transmission using a logical OR operation, so that the effective transmission is true if any of the transmissions for that day are true. The $\Phi_i(C_i,T_i)$ cluster now sends a single message to the OR cluster, $\delta_\Phi$, which is its posterior likelihood function of the aggregated transition for the day, divided by any messages sent from the OR cluster. Suppose also that the OR cluster is connected to Bernoulli clusters $1..n$ on other phones, and that we've received messages $\delta_1...\delta_m$ from these clusters. The OR cluster will then send the following backward message to Bernoulli cluster $j$
+However, suppose we add another cluster between the incoming transmission edges and the $\Phi_i(C_i,T_i)$ cluster. The new cluster aggregates all incoming transmission edges for one day into a single effective transmission using a logical OR operation, so that the effective transmission is true if any of the transmissions for that day are true. The $\Phi_i(C_i,T_i)$ cluster now sends a single message to the OR cluster, $\delta_\Phi$, which is its posterior likelihood function of the aggregated transition for the day, divided by any messages sent from the OR cluster. Suppose also that the OR cluster is connected to Bernoulli clusters $1..n$ on other phones, and that we've received forward messages $\delta_1...\delta_m$ from these clusters. The OR cluster needs to send the following backward message to Bernoulli cluster $j$
 \[
 \delta'_j = \left<\delta_\phi\,,\, (1-\delta_\phi)\prod_{i\ne j}(1-\delta_i) + \delta_\phi(1 - \prod_{i\ne j}(1-\delta_i))\right>
 \]
@@ -223,7 +230,7 @@ So, instead of sending separate backward messages to each Bernoulli cluster, we 
 
 \section{Quantifying the cost of outcomes}
 
-We measure cost in days of life lost. If a person dies of COVID-19, the cost of that death is the number of extra days of life that person would have had, had they not contracted the disease.
+We measure cost in days of life lost. If a person dies of COVID-19, the cost of that death is the expected number of extra days of life that person would have had, had they not contracted the disease.
 
 From this, we can calculate the cost of someone becoming infected when $R<1$. In this case, a single infection will result in an average of $-\frac{1}{\ln(R)}$ total infections. If $P_d$ is the case fatality ratio, then we would expect $-\frac{P_d}{\ln(R)}$ deaths and an average of
 \[
@@ -231,12 +238,12 @@ C_{id} = -\frac{P_dL}{\ln(R)}
 \]
 days of life lost, where $L$ is the average number of days lost when someone dies of COVID-19, considering age distribution and life expectancy.
 
-There is also a cost, $\chi$, associated with a person being hospitalised for a day (this covers the personal, inter-personal and financial costs). If $\bar{h}$ is the average number of days of hospitalisation per infection then we have a total expected cost of infection
+There is also a cost, $\chi$, associated with a person being hospitalised for a day (this covers the personal, inter-personal and financial costs). If $\bar{h}$ is the average number of days of hospitalisation per infection then we have a total expected cost of a single infection
 \[
 C_{i} = -\frac{P_dL + \chi\bar{h}}{\ln(R)}
 \]
 
-Let the cost of a person having to self-isolate be $C_s$ and let $C_T$ be the cost of taking all the tests if a person is alerted. These are subjective values which must measure the social, personal and economic costs.
+Let the cost of a person having to self-isolate be $C_s$ and let $C_T$ be the cost of taking the necessary tests if a person is alerted. These are subjective values which must measure the social, personal and economic costs.
 
 So, if a person is alerted, we immediately incur the costs of the tests $C_T$. If the tests are negative, we assume no further action is taken. If positive, we incur the cost of isolation of the person, $C_s$ but we gain the cost of the expected number of people the isolated person will not now infect, $\bar{\rho}C_i$. $\bar{\rho}$ can be calculated from the user's posterior infectiousness and their rate of close contacts. The positive result will also update the user's belief about transmission events. Any contacts with transmission event probabilities above a threshold, $p_t$ will also be alerted. Since we know nothing about other contacts beyond the probability of transmission during contact, we calculate the cost of alerting them as an average expected cost  given the time between the potential transmission event and the time of the alert, and the direction of the transmission $C_a(\Delta t, d)$. These values can be pre-calculated using Monte-Carlo simulation.
 
@@ -260,7 +267,11 @@ If this value is negative, then we should alert the user.
 
 The belief in disease onset time can also be used to schedule tests so as to trade off the varying sensitivity of the test at different stages of the disease against the need to isolate the person, and the potential delay in isolating contacts.
 
-The cost analysis can also be extended to the whole contact-tracing system in order to optimise the value of the thresholds to minimise expected cost.
+The cost analysis can also be extended to the whole contact-tracing system in order to optimise the value of the thresholds to minimise expected cost. This can also be extended to release strategies and re-testing strategies.
+
+At present, for simplicity, the analysis does not account for any difference in infectiousness of asymptomatic carriers compared to symptomatics. This can easily be added without significant change to the algorithm.
+
+It may be worthwhile getting exact costs from contacts rather from pre-computed average values. However, this may have a large impact on the amount of information that needs to be passed, and will put requirements on the frequency that published information will need to be checked.
 
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{unsrturl}
