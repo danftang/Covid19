@@ -47,38 +47,156 @@ In this paper we develop an optimal testing schedule
 % keywords can be removed
 \keywords{COVID-19, SARS-CoV-2}
 
-Suppose we have a number of tests $1...n$ that give us information about whether a person is infected with a disease. The characteristics of the $n^{th}$ test are defined by it's specificity, $P_n(-|\bar{i})$, which gives the probability that a non-infected person will test negative if tested with test $n$ , and it's sensitivity $P_n(+|i,\Delta t)$ which gives the probability that a person infected due to an exposure at a time $\Delta t$ before the test will test positive if tested with test $n$.
+\section{Description of the problem}
 
-Suppose the tests are used in the context of contact tracing and we assess the probability that person A is infected as $P_A(i)$. Suppose person B has been identified as having had a close contact with person A at a time $\Delta t$ ago.
+Suppose we have a number of tests $T_1...T_n$ that give us information about whether a person is infected with SARS-CoV-2. The characteristics of the $n^{th}$ test are defined by it's specificity, $P(T_n(-)|\bar{i})$, which gives the probability that a non-infected person will test negative if tested with test $n$, and it's sensitivity $P(T_n(+,t)|t_\omega)$ which gives the probability that a person tests positive on test $n$ at time $t$ given that they have maximum viral load at time $t_\omega$.
 
-We don't know whether A infected B or B infected A. We know B's other close contacts.
+Tests may take the form of clinical tests (e.g. PCR tests, antigen tests or antibody tests) but may also be simple observations of the presence or absence of symptoms (e.g. fever, persistent-cough or loss of taste).
 
-Each test has a financial cost $C_{Tn}$. We also attach a cost per day to isolating a person $C_I$ and a cost per day of allowing an infected person to be not isolated $C_{\bar{I}|i}$.
+In our case, we also assume that a mobile-phone tracing app is in widespread use. Each time two people with the app installed come close, their phones exchange randomly generated tokens. The phones remember the tokens along with the time of the contact. If anyone tests positive for SARS-CoV-2 in any of the clinical tests, the random tokens that their phones have given away are published. So, one of the available tests is to check whether any of the tokens on a person's phone matches any of those that have been published.
 
-Given this information, what is the schedule of testing/isolation of person B that minimises the expected cost.
+Each day, each person can choose to take any subset of tests, and then choose whether to self-isolate or not.
 
-We first need to calculate the probability distribution over B's first exposure time. We assume that there is a constant rate of environmental infection (via surfaces etc.) $\rho_e$ per day, a prior probability of infection $P(i)$ and a probability of transmission given a close contact with an infected person $P(T|i)$. So, given that person B has had close contacts with people (including A) at times $C = \left<t_1...t_m\right>$ and the probability that the $j^{th}$ contact is infected is
+Given
+\begin{itemize}
+\item A proportion, $a$, of infected people never develop symptoms.
+
+\item $P(\tau(t)|t_\omega, \sigma)$ is the probability that a symptomatic infected person with maximum viral load at time $t_\omega$ will, in a close contact with a susceptible person at time $t$, result in the transmission of the disease; note that $t$ may be negative here (i.e. transmission before symptom onset).
+
+\item $P(\tau(t)|t_\omega, \bar{\sigma})$ is the probability that an asymptomatic infected person with maximum viral load at time $t_\omega$ will, in a close contact with a susceptible person at time $t$, result in the transmission of the disease.
+
+\item An infected person, if never isolated, will infect $R_0$ people on average.
+\end{itemize}
+
+Let a strategy consist of two functions: one that takes a person's close contact times and test results to date and returns a decision on which tests to take, and one that takes the same information and decides whether to self-isolate/come out of isolation. Assume that everyone has the same strategy. Let the taking of test $n$ cost $C_{Tn}$, one day of self isolation cost $C_q$ and each new infection cost $C_I$. What strategy minimises the expected total cost from $t=0$ to $t=\infty$, given an initial number of infections $N_0$?
+
+[Decision is release date, trace date and test dates]
+
+
+\section{Quantifying cost}
+
+We measure cost in days of life lost. If a person dies of COVID-19, the cost of that death is the number of extra days of life that person would have had, had they not contracted the disease.
+
+From this, we can calculate the cost of someone becoming infected when $R<1$. In this case, a single infection will result in an average of $-\frac{1}{\ln(R)}$ total infections. If $P_d$ is the case fatality ratio, then we would expect $-\frac{P_d}{\ln(R)}$ deaths and an average of
 \[
-P_j(i) =
-\begin{cases}
-P_A(i) & \text{if }j=A \\
-P(i) & \text{otherwise}
-\end{cases}
+C_{id} = -\frac{P_dL}{\ln(R)}
 \]
-then the probability of first contact from the beginning of the clinically relevant period, $t_0$ (say 21 days before contact with A if B is asymptomatic or 14 days before symptom onset if patient has had clinical onset), is given by
+days of life lost, where $L$ is the average number of days lost when someone dies of COVID-19.
+
+There is also a cost, $\chi$, associated with a person being hospitalised for a day (this covers the personal, inter-personal and financial costs). If $\bar{h}$ is the average number of days of hospitalisation per infection then we have a total cost of infection
 \[
-P_{exp}(t|C) = \left(\rho_e + \sum_{k=1}^m \delta(t-t_k)P(T|i)P_k(i)\prod_{l=1}^{k-1}\left(P_l(\bar{i}) + P(\bar{T}|i)P_l(i)\right)\right)e^{-\rho_e(t-t_0)} 
+C_{i} = -\frac{P_dL + \chi\bar{h}}{\ln(R)}
 \]
 
-[Prior probability of Pexp given symptom onset time or absence of symptom onset, or treat observation of symptoms as a test?]
-[Probability of immunity]
-[Probability of asymptomatic]
+The cost of a person having to self-isolate for a day is $\xi$ days of life lost. This is a subjective value which must measure the social, personal and economic cost of isolation.
 
-So, the sensitivity of test $n$ at time $t$ given a set of close contacts is given by
+If R < 1, the cost of declaring someone uninfected is the probability that they are infected times the expected number of people they will infect times $-k^{-1}$, where $k = ln(R)$, times the case fatality rate times the average loss in days of life per COVID-19 death.
+
+Each test is also associated with a cost, $C_{Tn}$, representing the personal and financial cost of taking the test.
+
+[The cost of declaring someone infected is the probability that they are not infected times the isolation time (14 days) times the relative severity of a day in isolation compared to a day of life lost, minus the probability of infection times the expected number of infected contacts that will be isolated times $-k^{-1}$]
+
+\subsection{Total cost of a contact tracing strategy}
+
+If, under a contact tracing strategy, the average number of people isolated per infected case is $n_I$, the average number of tests of type $i$ per infected is $n_{Ti}$ and the effective reproduction number is $R<1$, and the average isolation time per isolated suspect is $t_i$, then the expected cost of the strategy per case is
 \[
-P_{nt}(+|i,C) = \int P_n(+|i,t-t_e)P_{exp}(t_e|C) dt_e
+C_t = -\frac{P_dL + \chi\bar{h} + \xi n_It_i + \sum_i n_{Ti}C_{Ti}}{\ln(R)}
+\]
+So, when designing a contact-tracing strategy, this is the number we should try to minimise.
+
+[We don't know whether A infected B or B infected A. We know B's other close contacts.]
+
+\section{Calculating posterior marginal probabilities over transmission events}
+
+Each close contact between a pair of people A and B is associated with two binary random variables: The probability of transmission from A to B and the probability of transmission from B to A. Our aim is to calculate the marginal posterior probabilities of these variables, given all the tests that have been done to date.
+
+Transmission from an infected to a susceptible results in the susceptible eventually developing the disease. Transmission to an already infected has no effect.
+
+So, each close contact on each person's phone is associated with a triplet $\left<t, \overrightarrow{P}, \overleftarrow{P}\right>$ where $\overrightarrow{P}$ is the probability of transmission to the other person and $\overleftarrow{P}$ is the probability of infection from the other person.
+
+\subsection{The joint probability}
+
+For a person A with close contacts $\left<\left<t_1, \overrightarrow{P}_1, \overleftarrow{P}_1\right>...\left<t_n, \overrightarrow{P}_n, \overleftarrow{P}_n\right>\right>$, given $\overleftarrow{P}_1...\overleftarrow{P}_n$
+
+
+\subsection{Belief updating PDF of onset given test results}
+
+We care most about the PDF of infectiousness per contact over time as, given this, we can calculate remaining infectiousness and probability of transmission events. This depends on whether someone is asymptomatic, and their onset time. We define onset in asymptomatics as an event that occurs without outward symptoms. The integral of onset over all times gives the probability of infection.
+
+[If we assume that there is a constant rate of environmental infection (via surfaces etc.) of $\rho_e$ per day, then the prior probability density of onset is $\rho_e$ per day.]
+Assume a prior probability of onset $P_{o0}$
+
+The posterior probability of onset given a test result T is given by
+\[
+P(\omega = t|T) = \frac{P(T|\omega = t)P(\omega=t)}{P(T|\bar{i})(1-\int P(\omega = t')dt') + \int P(T|\omega = t')P(\omega = t') dt'}
+\]
+This can also be used for belief update on multiple tests.
+
+Suppose we have a close contact with an person at time $t_c$ who was subsequently confirmed positive at time $t_+$. Either we infected the contact, or the contact infected us, or there was no transmission.
+
+Let $P(\omega = t|T_+(t_+))$ be the probability of onset at time $t$ given that a person was confirmed positive at time $t_+$.
+
+The probability that they infected us is given by
+\[
+P(\tau_{AB}|C(t_c)) = \int P_\tau(t_c-t_o)P(\omega = t_o|T_+(t_+)) dt_o
+\]
+The probability that we infected them is given by (prior to knowledge of our own symptoms)
+\[
+P(\tau_{BA}|C(t_c)) = \int P_\tau(t_c-t_o)P(\omega = t_o) dt_o
+\]
+and the probability of no transmission is given by
+\[
+P(\bar{\tau}|C(t_c)) = 1 - P(\tau_{AB}|C(t_c)) - P(\tau_{BA}|C(t_c))
 \]
 
+Great, but more importantly, how do we update our belief about onset time and asymptomaticness.
+\[
+P(\omega = t|C_+(t_c)) = \frac{P(C_+(t_c)|\omega=t)P(\omega=t)}{P(C_+(t_c))}
+\] 
+
+...first of all, calculate probability of inoculation...
+
+\subsection{Probability of onset given marginal probability of exposure}
+
+Each close contact has associated with it a random variable that can take one of three values: exposure (transmission from other), infection (transmission to other) or no transmission.
+
+So, given that person B has had close contacts at times $C = \left<t_1...t_m\right>$ where each contact has probability of being an exposure event $P_{\tau 1}...P_{\tau m}$, then the probability density of exposure at time $t$ is given by
+\[
+P(\epsilon(t)|\left<t_1...t_m\right>) = \rho_e + \sum_{k=1}^m \delta(t-t_k)P_{\tau k}
+\]
+So, probability density that \textbf{first} exposure since time $t_0$ is at time $t$ is given by
+\[
+P(\epsilon_1(t,t_0)|\kappa = \left<t_1...t_m\right>) = e^{-\rho_e(t-t_0)} \prod_{\left\{k:t_k<t\right\}}\left(1 -   P_{\tau k} \right)\left(\rho_e + \sum_{k=1}^m \delta(t-t_k)P_{\tau k}\right)
+\]
+so probability of onset given contacts and a probability of immunity $\iota$ at time $t_0$ is
+\[
+P(\omega(t)|\kappa=\left<t_1...t_m\right>,\iota) = (1-\iota)\int P(\omega(t)|\epsilon(t'))P(\epsilon_1(t',t_0)|\kappa = \left<t_1...t_m\right>) dt'
+\]
+So, the probability of test $n$ being positive at time $t$ given a set of close contacts is given by
+\[
+P(T_n(+,t)|\kappa=\left<t_1...t_m\right>,\iota) = \int P_n(T_n(+,t)|\omega =t_\omega)P(\omega (t_\omega )|\kappa=\left<t_1...t_m\right>,\iota) dt_\omega
+\]
+
+\subsection{Expected cost of release given onset time}
+
+The expected cost of release is just
+\[
+C_r = \int_{-\infty}^{\infty} P(t_\omega) C_i\int_t^{\infty} \left(P(\sigma)P(\tau(t)|t_\omega,\sigma) + P(\bar{\sigma})P(\tau(t)|t_\omega,\bar{\sigma})\right)\rho_c dt \, dt_\omega
+\]
+where $\rho_c$ is the rate of contact for that person (which is derivable from the rate of contacts in the app records). Note that people who have more frequent contacts will have greater cost of release given that they are infected.
+
+[If a persons expected remaining total infectiveness is above some threshold, then we isolate]
+
+\subsection{Expected cost of publishing tokens not publishing tokens}
+
+The decision is which, if any, day tokens to publish.
+
+If we don't trace a person with onset $t_\omega$ then there is a chance that we allow infected contacts to go undetected. If we do trace, there is the chance of falsely isolating and testing non-infected individuals.
+
+If I publish a day token, along with my expected $P_\tau$ for that day, 
+
+
+[Need to capture: Suppose A becomes symptomatic and tests positive and has only been in contact with B. We need to put high suspicion on B. Maybe each contact should be associated with a 3 valued value for A infects B, B infects A or no transmission. Or, probability distribution over who was responsible for first exposure, then probability of onward infection given that.]
 
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{unsrturl}
