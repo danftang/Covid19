@@ -18,7 +18,7 @@
 \usepackage{verbatim}
 %\usepackage{apacite}
 
-\title{Decentralised, privacy-preserving inference for mobile phone contact tracing of SARS-CoV-2}
+\title{Decentralised, privacy-preserving Bayesian inference for mobile phone contact tracing of SARS-CoV-2}
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
@@ -40,22 +40,31 @@
 \maketitle
 
 \begin{abstract}
-With the announcement of Apple and Google's partnership to introduce a contact-tracing functionality to iOS and Android, it seems increasingly likely that contact tracing via a smart-phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after the initial outbreak.
+With the announcement of Apple and Google's partnership to introduce contact-tracing functionality to iOS and Android, it seems increasingly likely that contact tracing via a smart-phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after the initial outbreak.
 
-When deciding whether a person should be isolated, tested or released, information about test results and symptoms of that person's contacts can help inform the decision. However, the privacy preserving nature of the Apple/Google contact tracing algorithm means that centralised curation of these decisions is not possible. Here we present a decentralised algorithm that estimates the posterior probability of viral transmission events and evaluates when a user should be notified, tested or released from isolation while preserving user privacy. The algorithm is a message passing algorithm, so each smart-phone can be used to execute a small part of the algorithm without releasing any sensitive information. In this way, the network of all participating smart-phones forms a distributed computation device that performs Bayesian inference and informs each user when they should start/end isolation or be tested. 
+When deciding whether a person should be isolated, tested or released, information about test results and symptoms of that person's contacts should be used in the most efficient way to inform the decision. However, the privacy preserving nature of the Apple/Google contact tracing algorithm means that centralised curation of these decisions is not possible so each phone must use its own ``risk model'' to inform decisions. Ideally, the risk model should use Bayesian inference to decide the best course of action given the test results of the user and those of the user's contacts. Here we present a decentralised algorithm that estimates the Bayesian posterior probability of viral transmission events and evaluates when a user should be notified, tested or released from isolation while preserving user privacy. The algorithm is a message passing algorithm, based on belief propagation, so each smart-phone can be used to execute a small part of the algorithm without releasing any sensitive information. In this way, the network of all participating smart-phones forms a distributed computation device that performs Bayesian inference and informs each user when they should start/end isolation or be tested. 
 
 \end{abstract}
 
 % keywords can be removed
-\keywords{COVID-19, SARS-CoV-2}
+\keywords{COVID-19, SARS-CoV-2, contact tracing, Bayesian inference, belief propagation}
+
+\section{Introduction}
+
+While much has been said about how to use smart-phones to inform people that they have been in close contact with an infected person, relatively little has been said about how to evaluate the best course of action given information about one's own test results and those of ones contacts.
+
+In talk of mobile contact tracing algorithms, it is often assumed that test results are 100\% reliable and that the principal concern is to track onward transmission. However, clinical tests have been found to have quite high rates of false-negatives and, in the presence of a high proportion of asymptomatic transmission, it is as important to identify who a person caught the disease from as it is to identify who they may have passed it on to, so that the tracing can spread up the tree of infection as well as down. With these considerations, the evaluations of risk and the decision process becomes more complicated.
+
+For example, if two people become symptomatic and test positive, we know that each of them must have been infected somewhere around 5 days before their respective symptoms began. Each person is likely to have had a number of contacts around that time but if they have one contact in common then it becomes much more probable that the common contact was the original source of the infection. If it turns out the suspected source was symptomatic around 5 days ago (but opted not to be tested) then this evidence may be enough to immediately trace their contacts to identify other possible infectees (it would be less important to isolate the original source at this point as they may be less infectious at this point, but if that person had a tendency to have a very large number of contacts a day and there was still a chance of residual infectiousness, it may be deemed prudent to isolate for a number of days). Suppose an early contact of the original source is symptomatic but tests negative, yet on the next day a contact of his independently becomes symptomatic and tests positive. If the newly confirmed case was in contact only with the negative case around the inferred time of infection, we may have enough information to deem the negative test a false-negative and contact trace/isolate in any case.
+
+In order to do this kind of inference automatically, while maintaining the privacy of a user's close contacts, requires a reasonably sophisticated risk model.
 
 \section{Description of the problem}
 
-Suppose we have a society where mobile-phone contact tracing is in operation. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from a daily exposure key. The phones keep a log of the PIDs along with the time of the contact and their own daily exposure keys. If anyone tests positive for SARS-CoV-2, a subset of their daily exposure keys are published on a public server. Each day, everyone's phone checks for newly published exposure keys and must assess their risk of exposure and decide whether to notify the user to self-isolate and arrange to be tested. If a user is isolated, a decision must also be made when to end the isolation.
+Suppose we have a society where mobile-phone contact tracing is in operation. Each day, enabled phones randomly choose a ``daily exposure key''. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from their daily exposure key. The phones keep a log of the PIDs along with the time of the contact and their own daily exposure keys. If anyone tests positive for SARS-CoV-2, a subset of their daily exposure keys are published on a public server. Each day, everyone's phone checks for newly published exposure keys and checks them against the PIDs of their close contacts. If there is a match, the phone must assess the user's risk of exposure and decide whether to notify the user to self-isolate and/or arrange to be tested. If a user is isolated, a decision must also be made if/when more tests should be done and when to end the isolation.
 
 The problem we consider here is how to calculate whether and when to notify the user, perform tests and release from isolation, while maintaining the privacy of a user's close contacts.
 
-The decision ought to be influenced by the test results of a user's close contacts (and even contacts of contacts), since these affect the probability that the user has been exposed and the probability that the user has exposed a close contact. In order to perform the necessary inference while maintaining the privacy of a user's close contacts, careful consideration needs to be paid to the way information flows around the system.
 
 \section{Expressing the joint probability over transmission events}
 %==============================================================================
