@@ -1,0 +1,25 @@
+graph clustergraph {
+  subgraph cluster_phone1 {
+    label="Phone 1"
+    labeljust="l"
+    P1[label=<&Phi;<SUB>1</SUB>(&iota;<SUB>1&#8594;2</SUB>,&tau;<SUB>2&#8594;1</SUB>,&theta;)>]
+    T12[label=<&Phi;<SUB>B</SUB>(&tau;<SUB>1&#8594;2</SUB>,&iota;<SUB>1&#8594;2</SUB>)>]
+  }
+  subgraph cluster_phone2 {
+    label="Phone 2"
+    labeljust="r"
+    P2[label=<&Phi;<SUB>2</SUB>(&iota;<SUB>2&#8594;1</SUB>,&tau;<SUB>1&#8594;2</SUB>,&theta;)>]
+    T21[label=<&Phi;<SUB>B</SUB>(&tau;<SUB>2&#8594;1</SUB>, &iota;<SUB>2&#8594;1</SUB>)>]
+  }
+  subgraph cluster_PS {
+    label="Param server"
+    labeljust="c"
+    PS[label=<&Phi;(&theta;)>]
+  }
+  PS -- P1
+  PS -- P2
+  P2 -- T21
+  P1 -- T12
+  T12 -- P2
+  T21 -- P1
+}

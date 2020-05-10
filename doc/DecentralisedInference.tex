@@ -18,7 +18,7 @@
 \usepackage{verbatim}
 %\usepackage{apacite}
 
-\title{Decentralised, privacy-preserving Bayesian inference for mobile phone contact tracing of SARS-CoV-2}
+\title{Decentralised, privacy-preserving Bayesian inference for mobile phone contact tracing}
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
@@ -42,8 +42,9 @@
 \begin{abstract}
 With the announcement of Apple and Google's partnership to introduce contact-tracing functionality to iOS and Android, it seems increasingly likely that contact tracing via a smart-phone will form an important part of the effort to manage the COVID-19 pandemic and prevent resurgences of the disease after the initial outbreak.
 
-When deciding whether a person should be isolated, tested or released, information about test results and symptoms of that person's contacts should be used in the most efficient way to inform the decision. However, the privacy preserving nature of the Apple/Google contact tracing algorithm means that centralised curation of these decisions is not possible so each phone must use its own ``risk model'' to inform decisions. Ideally, the risk model should use Bayesian inference to decide the best course of action given the test results of the user and those of the user's contacts. Here we present a decentralised algorithm that estimates the Bayesian posterior probability of viral transmission events and evaluates when a user should be notified, tested or released from isolation while preserving user privacy. The algorithm is a message passing algorithm, based on belief propagation, so each smart-phone can be used to execute a small part of the algorithm without releasing any sensitive information. In this way, the network of all participating smart-phones forms a distributed computation device that performs Bayesian inference and informs each user when they should start/end isolation or be tested. 
+When deciding whether a person should be isolated, tested or released, information about test results and symptoms of that person's contacts should be used in the most efficient way to inform the decision. However, the privacy preserving nature of the Apple/Google contact tracing algorithm means that centralised curation of these decisions is not possible so each phone must use its own ``risk model'' to inform decisions. Ideally, the risk model should use Bayesian inference to decide the best course of action given the test results of the user and those of other users. Here we present a decentralised algorithm that estimates the Bayesian posterior probability of viral transmission events and evaluates when a user should be notified, tested or released from isolation while preserving user privacy. The algorithm also uses data from the contact tracing activity to be used to update the disease models on all phones and to allow Epidemiologists to better understand the dynamics of the disease.
 
+The algorithm is a message passing algorithm, based on belief propagation, so each smart-phone can be used to execute a small part of the algorithm without releasing any sensitive information. In this way, the network of all participating smart-phones forms a distributed computation device that performs Bayesian inference and informs each user when they should start/end isolation or be tested.
 \end{abstract}
 
 % keywords can be removed
@@ -57,34 +58,35 @@ Since clinical tests for SARS-CoV-2 have been found to have quite high rates of 
 
 Also, there is evidence that there is a high proportion of asymptomatic transmission of SARS-CoV-2\cite{lavezzo2020suppression}. This means that it is important to identify asymptomatic carriers. So, if someone is confirmed infected, it is important to trace who they caught the disease from, as well as who they may have passed the disease on to, so that a potential asymptomatic carrier can be identified and their contacts traced. For example, if two people become symptomatic and test positive, we know that each of them must have been infected somewhere around 5 days before their respective symptoms began. Each person is likely to have had a number of contacts around that time but if they have one contact in common then it becomes much more probable that the common contact was the original source of the infection. If it turns out the suspected source was symptomatic around 5 days ago (but opted not to be tested) then this evidence may be enough to immediately trace their contacts to identify other possible infectees (it would be less important to isolate the original source at this point as they may be less infectious at this point, but if that person had a tendency to have a very large number of contacts a day and there was still a chance of residual infectiousness, it may be deemed prudent to isolate for a number of days).
 
-Finally, if a person is traced as a contact of a confirmed case, but the contact occurred a few hours ago, there is little point in testing that person immediately as the test is unlikely to be positive even if the person will go on to develop the disease. There is also no need for the person to immediately isolate as they are probably not infectious at this point. However, at some time in the future we will want to test and possibly isolate that person, but when is the optimal time to do this?
+Finally, if a person is traced as a contact of a confirmed case, but the contact occurred a few hours ago, there is little point in testing that person immediately as the test is unlikely to be positive even if the person will go on to develop the disease. There is also no need for the person to immediately isolate as they are probably not infectious at this point. However, at some time in the near future we will want to test and possibly isolate that person, but when is the optimal time to do this?
 
 Doing this kind of inference automatically, while maintaining the privacy of a user's close contacts, requires reasonably sophisticated inference. Here we present an algorithm that uses a modification of the belief propagation algorithm\cite{pearl2014probabilistic} to do Bayesian inference in order to decide on a testing schedule and isolation timings that minimise expected overall cost.
 
 \section{Description of the problem}
+%===================================
 
-Suppose we have a society where mobile-phone contact tracing is in operation. Each day, enabled phones randomly choose a ``daily exposure key''. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from their daily exposure key. The phones keep a log of the PIDs along with the time of the contact and their own daily exposure keys. If anyone tests positive for SARS-CoV-2, a subset of their daily exposure keys are published on a public server. Each day, everyone's phone checks for newly published exposure keys and checks them against the PIDs of their close contacts. If there is a match, the phone must assess the user's risk of exposure and decide whether to notify the user to self-isolate and/or arrange to be tested. If a user is isolated, a decision must also be made if/when more tests should be done and when to end the isolation.
+Suppose we have a society where mobile-phone contact tracing is in operation. Each day, enabled phones randomly choose a ``daily exposure key''. When enabled phones come close they exchange proximity IDs (PIDs) which are numbers derived from their daily exposure key. The phones keep a log of the exchanged PIDs along with the time of the contact and their own daily exposure keys. If anyone's risk of infection goes above some threshold, a subset of their daily exposure keys are published on a public server along with a payload containing data. Each day, everyone's phone checks for newly published exposure keys and checks them against the PIDs of their close contacts. If there is a match, the phone must assess the user's risk of exposure and decide whether to notify the user to self-isolate and/or arrange to be tested. If a user is isolated, a decision must also be made if/when more tests should be done and when to end the isolation.
 
-The problem we consider here is how to calculate whether and when to notify the user, perform tests and release from isolation, while maintaining the privacy of a user's close contacts.
+The problem we consider here is how to calculate whether and when to notify the user, perform tests and release from isolation, while maintaining the privacy of a user's close contacts. In addition, we would like to use the data gathered from infected cases to update a set of epidemiological parameters about the natural history of the disease, again without compromising the privacy of the users contacts.
 
 
 \section{Expressing the joint probability over transmission events}
 %==============================================================================
 
-If two people, A and B, are in close contact and broadcast PIDs $a$ and $b$ respectively, then there is a chance $P(\tau_{a \rightarrow b})$ that A will transmit the virus to B and a chance $P(\tau_{b \rightarrow a})$ that B will transmit the virus to A. Our first aim is to calculate the marginal posterior probabilities of these events, given all the tests/observations that have been done on all people to date. When we talk about transmission, we mean the movement of vital viral material from one person to another such that if the other person was susceptible, they would become infected. Transmission to an already infected person is still a transmission event, but has no effect.
+If two people, A and B, are in close contact and broadcast PIDs $a$ and $b$ respectively, then there is a chance $P(\tau_{a \rightarrow b})$ that A will transmit the virus to B and a chance $P(\tau_{b \rightarrow a})$ that B will transmit the virus to A. Our first aim is to calculate the marginal posterior probabilities of these events, given all the tests/observations that have been done on all people to date. When we talk about transmission, we mean the movement of viral material from one person to another such that if the other person was susceptible, they would become infected. Transmission to an already infected person is still a transmission event, but has no effect.
 
-The binary random variables $\tau_{a\rightarrow b}$ take values either 1 or 0. A value of 1 denotes the event that a transmission occurred from A to B. A value of 0 denotes the event that A and B had a close contact but no transmission occurred from A to B.
+The binary random variables $\tau_{a\rightarrow b}$ take values either 1 or 0. A value of 1 denotes the event that a transmission occurred from A to B, while a value of 0 denotes the event that A and B had a close contact but no transmission occurred from A to B.
 
-When a contact first occurs, the user has no information about the other participant so the probability of transmission from others is set to a prior probability. Up-to-date regional prior probabilities can be downloaded from publicly available servers and the phone can estimate its current region from the name/ID of the most recently connected cell tower (this information will always stay local on the phone).
+When a contact first occurs, the user has no information about the other participant so the probability of transmission from others is set to a prior probability. Up-to-date regional prior probabilities can be downloaded from publicly available servers and the phone can estimate its current region from recent events such as the name/ID of the most recently connected cell tower (this information will always stay local on the phone).
 
-\subsection{Conditional probability of transmission}
+\subsection{The disease model}
 %===================================================
 
-Given that a person, A, has a close contact at time $t$, what is the probability that they will transmit the virus to the other participant given that their log of close contacts from the start of the log at $t=0$ up to time $t$ is $C(t) = \left< t_{1},a_1,b_1 \right> ... \left< t_{n},a_n,b_n \right>$?
+Consider the phone of person A at time $t$ with a log of contacts $C(t) = \left< t_{1},a_1,b_1 \right> ... \left< t_{n},a_n,b_n \right>$, where $t_i$ is the time of the contact relative to the start of the log and $a_i$ and $b_i$ are the exchanged PIDs.
 
-Define the \textit{first-exposure time} to be the earliest time that A was exposed to the virus and let $\epsilon(t)$ be the event that the first exposure is at time $t$. We assume that there is a continuous risk of exposure from the environment (e.g. from surfaces or close contacts that were missed for any reason) at a rate $\rho$. $\rho$ can be calculated from the local prevalence of the disease, the uptake of the app and the rate of contacts of the user. Given this, the probability density of first exposure since the start of the log is
+Define the \textit{first-exposure time} to be the earliest time that A was exposed to the virus and let $\epsilon(t)$ be the event that the first exposure is at time $t$. We assume that there is a continuous and slowly changing risk of exposure from the environment (e.g. from surfaces or close contacts that were missed for any reason) at a rate $\rho$. $\rho$ can be calculated from the local prevalence of the disease, the uptake of the app and the rate of contacts of the user. Given this, the probability density of first exposure since the start of the log is
 \begin{equation}
-P\left(\epsilon(t)|C(t)\right) = \left(\rho + \sum_{i=1}^n \delta(t - t_i)\tau_{a_i\rightarrow b_i} \prod_{j<i}(1-\tau_{a_j\rightarrow b_j})\right) e^{-\rho t}
+P\left(\epsilon(t)|C(t)\right) = \left(\rho + \sum_{i=1}^n \delta(t - t_i)\tau_{b_i\rightarrow a_i} \prod_{j<i}(1-\tau_{b_j\rightarrow a_j})\right) e^{-\rho t}
 \label{firstExposure}
 \end{equation}
 where $\delta$ is the Dirac delta function.
@@ -93,17 +95,17 @@ Define the \textit{disease onset time} to be the earliest time that an infected 
 \[
 P(\omega(t)|C(t)) = \int_0^{t} P(\omega(t)|\epsilon(t_\epsilon))P(\epsilon(t_\epsilon)|C(t)) dt_\epsilon
 \]
-where $P(\omega(t)|\epsilon(t_\epsilon))$ represents the incubation time of the disease. This could be an analytical distribution such as a Weibull distribution $P_w(t-t_\epsilon)$, or a more empirical fit to data.
+where $P(\omega(t)|\epsilon(t_\epsilon))$ represents the incubation time of the disease. This could be an analytical distribution such as a Weibull distribution $P_w(t-t_\epsilon)$, or some more complex model.
 
-Given the disease onset time, the infectiousness of a person at time $t$ is a measure of the probability of transmission in a close contact. Let $\iota(t) = p_\tau$ be the event that a person is in the state of viral shedding etc. such that they have the probability $p_\tau$ of transmitting the virus should they have a close contact at time $t$.
+After disease onset, the amount of viral shedding will vary with time. Let $\iota(t) = \rho_i$ be the event that a person is shedding viruses at a rate $\rho_i$ at time $t$, then the probability density of viral shedding is
 \[
-P(\iota(t) = p_\tau|C(t),\alpha) = \int_0^t \delta(\iota(t|\omega(t_\omega),\alpha)-p_\tau)P(\omega(t_\omega)|C(t)) dt_\omega
+P(\iota(t) = \rho_i|C(t),\alpha) = \int_0^t \delta(\iota(t|\omega(t_\omega),\alpha)-\rho_i)P(\omega(t_\omega)|C(t)) dt_\omega
 \]
 where $\iota(t|\omega(t_\omega),\alpha)$ represents the clinical course of the disease and $\alpha$ is a binary random variable indicating whether the person is an asymptomatic carrier (in which case, their infectiousness curve may be different from symptomatics). This could be a Beta distribution $P_\beta(t-t_\omega)$ or something more complex. Asymptomatics may have a completely different distribution, or may have the same distribution multiplied by a constant $\iota_\alpha$.
 
 Given a person's infectiousness, we assume that a close contact is a Bernoulli draw, based on that person's infectiousness.
 \[
-P(\tau(t)|\iota(t)) = B(\tau(t), \iota(t))
+P(\tau|\iota(t)) = B(\tau, \iota(t))
 \]
 If detailed information about the contact is logged (e.g. duration and proximity), the Bernoulli distribution could be replaced with a more sophisticated model of the contact to get a more accurate probability of transmission (e.g. \cite{sattler2020risk}). Here we will assume a Bernoulli distribution to demonstrate the algorithm, but the same development could be applied to a more complex transmission model.
 
@@ -121,85 +123,106 @@ P(\xi^+_n(t)|C(t),\alpha) = \int_0^t P(\xi^+_n(t)|\omega(t_\omega),\alpha)P(\ome
 
 The above conditional probabilities for each individual can be put together to create the joint probability over all people.
 
-The probability that a contact with a person at time $t$ ends in a transmission event from that person depends only on the transmission events to that person before $t$, so we can imagine building up the joint from conditionals starting with the earliest contact and moving one at a time to the latest. If we let $\mathcal{C}$ be the set of all transmission events for all people, it can be seen that the joint probability is given by
-\[
-P(\mathcal{C}) =
-\prod_{\tau_{a\rightarrow b}(t) \in \mathcal{C}}
-P\left(\tau_{a\rightarrow b}(t)|
-  \left\{ \tau_{b' \rightarrow a}(t') :
-    \tau_{b' \rightarrow a}(t') \in \mathcal{C} \wedge
-    t' < t
-  \right\}
-\right)
-\]
-
-If the $i^{th}$ user is involved in transmission events $C_i$, and $\mathcal{C} = \cup_{i=1}^N C_i$, then we can group the terms by onward transmission from each user, giving
-
-\[
-P(
-C_1...C_N) =
-\prod_{i} \prod_{\left< t,a,b \right> \in C_i}
-P\left(\tau_{a\rightarrow b}(t)|
-  \left\{ \tau_{b'\rightarrow a}(t'):
-    \tau_{b' \rightarrow a}(t') \in C_i \wedge
-    t' < t 
-  \right\}
-\right)
-\]
-
-If we note that the probability of a positive/negative test result also depends only on the contacts prior to the test and whether they are asymptomatic carriers, then we can also add test results to the joint. If $T_i$ is the set of tests taken by user $i$,  and $\alpha_i$ indicates whether they are asymptomatic carriers, the joint becomes
+The probability that a contact with a person at time $t$ ends in a transmission event from that person is independent of other variables given the transmission events to that person before $t$, so we can imagine building up the joint from conditionals starting with the earliest contact and moving one at a time to the latest. If the $i^{th}$ user has a log of contacts $C_i$ and let $\mathcal{C} = \cup_{i=1}^N C_i$ be the set of all close contacts in the logs of all people, and $\mathcal{T}$ be the set of all transmission events, it can be seen that the joint probability is given by
 \begin{equation}
-P(C_1..C_N, T_1..T_N, \alpha_1..\alpha_N) =
-\prod_{i} \prod_{\left< t,a,b \right> \in C_i}
-P\left(\tau_{a\rightarrow b}(t)|\mathcal{L}(C_i,a,t),\alpha_i \right)
+P(\mathcal{T},\theta) =
+P(\theta)
+\prod_{\left<t,a,b\right> \in \mathcal{C}}
+P\left(\tau_{a\rightarrow b}|
+  \left\{ \tau_{b' \rightarrow a} :
+    \left<t',b',a\right> \in \mathcal{C} \wedge
+    t' < t
+  \right\},\theta
+\right)
+\label{allJoint}
+\end{equation}
+where $\theta$ is the set of epidemiological parameters that specify, for example, the incubation period distribution and the course of viral shedding, and $P(\theta)$ are our prior beliefs in those parameter values based on current scientific understanding.
+
+We can group the terms in equation \ref{allJoint} by onward transmission from each user, giving
+
+\[
+P(\mathcal{T},\theta) =
+P(\theta)\prod_{i}
+\prod_{\left<t,a,b\right> \in C_i}
+P\left(\tau_{a\rightarrow b}|
+  \left\{ \tau_{b'\rightarrow a'}:
+    \left<t',a',b'\right> \in C_i \wedge
+    t' < t 
+  \right\},\theta
+\right)
+\]
+
+If we note that the probability of a positive/negative test result also depends only on the user's contacts prior to the test and whether the user is an asymptomatic carrier, then we can also add test results to the joint. If $T_i$ is the set of tests taken by user $i$,  and $\alpha_i$ indicates whether they are asymptomatic carriers, the joint becomes
+\begin{equation}
+P(\mathcal{T}, T_{1..N}, \alpha_{1..N},\theta) =
+P(\theta)
+\prod_{i} P(\alpha_i)
+\prod_{\left<t,a,b\right> \in C_i}
+P\left(\tau_{a\rightarrow b}|\mathcal{L}(C_i,t),\alpha_i, \theta \right)
 \prod_{\xi_{n}(t) \in T_i}
-P(\xi_{n}(t)|\mathcal{L}(C_i,a,t),\alpha_i)
+P(\xi_{n}(t)|\mathcal{L}(C_i,t),\alpha_i)
 \label{joint}
 \end{equation}
-where we use the shorthand
+where $P(\alpha)$ is the prior probability of being an asymptomatic carrier, and
 \[
-\mathcal{L}(C,a,t) =   \left\{ \tau_{b'\rightarrow a}(t'):\tau_{b' \rightarrow a}(t') \in C \wedge t' < t \right\}
+\mathcal{L}(C,t) =   \left\{ \tau_{b\rightarrow a}:\left<t',a,b\right> \in C \wedge t' < t \right\}
 \]
-This joint can be expanded to include each user's infectiousness at the time of each contact. For ease of notation, we imagine the infectiousness to be included in the Tuple of each contact so $\left<t,a,b,\iota\right> \in C_i$ is a contact at time $t$ where the broadcaster of PID $a$ had infectiousness $\iota$. So, the joint now looks like this
+This joint can be expanded to include each user's infectiousness at the time of each contact. For ease of notation, we imagine an ``augmented contact log'' which  includes the infectiousness in the Tuple of each contact so $\left<t,a,b,\iota\right> \in C_i$ is a contact at time $t$ where the broadcaster of PID $a$ had infectiousness $\iota$. So, the joint now looks like this
 \begin{equation}
-P(C_1..C_N, T_1..T_N, \alpha_1..\alpha_N) =
-\prod_{i} \prod_{\left< t,a,b, \iota \right> \in C_i}
-B(\tau_{a\rightarrow b}(t)|\iota)
-P\left(\iota|\mathcal{L}(C_i,a,t),\alpha_i \right)
+P(\mathcal{T},\mathcal{I}, T_{1..N}, \alpha_{1..N},\theta) =
+P(\theta)
+\prod_{i} P(\alpha_i)
+\prod_{\left< t,a,b, \iota \right> \in C_i}
+B(\tau_{a\rightarrow b}|\iota)
+P\left(\iota|\mathcal{L}(C_i,t),\alpha_i,\theta \right)
 \prod_{\xi_{n}(t) \in T_i}
-P(\xi_{n}(t)|\mathcal{L}(C_i,a,t),\alpha_i)
+P(\xi_{n}(t)|\mathcal{L}(C_i,t),\alpha_i)
 \label{ijoint}
 \end{equation}
-
+where $\mathcal{I}$ is the set of all infectiousnesses.
 
 \section{Calculating posterior marginal probabilities of transmission events}
 %============================================================================
 
-We can now calculate the posterior marginal probabilities of all transmission events, given all the test results. We do this by embedding the joint in a cluster graph and performing belief propagation. We start with $N$ clusters, one for each user, where the $i^{th}$ cluster is given by
+\begin{figure}
+\begin{center}
+\includegraphics[width=10cm]{clusterGraph.pdf}
+\end{center}
+\caption{Layout of cluster graph for two phones that have exchanged PIDs}
+\label{ClusterGraph}
+\end{figure}
+
+We can now calculate the posterior marginal probabilities of all transmission events, given all the test results. We do this by embedding the joint in a cluster graph and performing belief propagation\cite{koller2009probabilistic}. Figure \ref{ClusterGraph} shows the layout of the cluster graph for two phones that have exchanged PIDs. Each phone, $i$, has authority over a cluster that represents the disease model of the user
 \begin{equation}
-\Phi_i(C_i, T_i,\alpha_i) =
-\prod_{\left< t,a,b, \iota \right> \in C_i}
-P\left(\iota|\mathcal{L}(C_i,a,t),\alpha_i \right)
+\Phi_i(\iota_{1..j},\tau_{1..j}, \theta) =
+\sum_{\alpha_i}P(\alpha_i)
+\prod_{\left< t,a,b, \iota_{a\rightarrow b} \right> \in C_i}
+P\left(\iota_{a\rightarrow b}|\mathcal{L}(C_i,t),\alpha_i, \theta \right)
 \prod_{\xi_{n}(t) \in T_i}
-P(\xi_{n}(t)|\mathcal{L}(C_i,a,t),\alpha_i)
+P(\xi_{n}(t)|\mathcal{L}(C_i,t),\alpha_i)
 \label{ijoint}
 \end{equation}
-We separate out the Bernoulli terms into their own clusters
+where $\iota_{1..j} = \left\{\iota_{a\rightarrow b}:\left< t,a,b, \iota \right> \in C_i\right\}$ and $\tau_{1..j} = \left\{\tau_{b\rightarrow a}:\left< t,a,b, \iota \right> \in C_i\right\}$.
+
+Each phone also has authority over one Bernoulli cluster for each onward transmission event from the user
 \begin{equation}
-\left\{ \Phi_{B}(\tau_{a\rightarrow b}(t),\iota) = B(\tau_{a\rightarrow b}(t)|\iota) : \left<t,a,b,\iota\right> \in C_i \right\}
+\left\{ \Phi_{B}(\tau_{a\rightarrow b},\iota_{a\rightarrow b}) = B(\tau_{a\rightarrow b}|\iota_{a\rightarrow b}) : \left<t,a,b,\iota\right> \in C_i \right\}
 \end{equation}
-in this way, we end up with a Bethe cluster graph which has very good properties for performing belief propagation, so we would expect belief propagation to perform well on this graph both in terms of the accuracy of the results and the number of messages passed.
+ 
+Finally, there is a cluster containing the epidemiological model parameters which is held on a central server, from which all phones can obtain an up-to-date posterior distribution of the disease model parameters.
+
+By splitting the joint into clusters in this way, we end up with a Bethe cluster graph which has good properties for performing belief propagation\cite{koller2009probabilistic}, so we would expect belief propagation to perform well on this graph both in terms of the accuracy of the results and the number of messages passed.
 
 Given the cluster graph, belief propagation calculates the marginal probability of each cluster. The marginals can be conditioned on the results of all tests by simply setting the values of each test when calculating the messages to pass.
 
 \subsection{Passing of messages}
 %===============================
 
-We now describe how belief propagation can be achieved on the network of mobile phones, without the need to expose any sensitive information.
+We now describe how belief propagation can be achieved on the network of mobile phones, and the parameter server, without the need to expose any sensitive information.
 
-Suppose that the $i^{th}$ phone is responsible for clusters $\Phi_i(C_i,T_i,\alpha_i)$ and the associated onward transmission Bernoulli clusters $\Phi_{B}(\tau_{a\rightarrow b}(t),\iota)$ for all $\left<t,a,b,\iota\right>\in C_i$. There are two types of message that need to be sent from phone $i$: ``forward'' messages from the phone's Bernoulli clusters to the $\Phi_j$ clusters of other phones, and ``backward'' messages from the phone's $\Phi_i$ cluster to the Bernoulli clusters on other phones. We use the notation $\delta$ for forward messages and $\delta'$ for backward messages
+Consider the messages sent from the $i^{th}$ phone. There are three types of message that need to be sent: ``forward'' messages from the phone's Bernoulli clusters to the $\Phi_j$ clusters of other phones, ``backward'' messages from the phone's $\Phi_i$ cluster to the Bernoulli clusters on other phones and ``epidemiological'' messages giving the parameter server information about the nature of the disease. We use the notation $\delta$ for forward messages and $\delta'$ for backward messages.
 
-In order to reduce the total number of messages sent, messages are only sent if the information contained within them exceeds a threshold value. Since all edges that span phones represent binary variables, the information content of a message (once normalised) is just
+In order to reduce the total number of messages sent, messages are only sent if the information contained within them exceeds a threshold value. Since all edges that span phones represent binary variables, the information content of a message between phones (once normalised) is just
 \[
 I(\delta) = 1 + \delta\log_2(\delta) + (1-\delta)\log_2(1-\delta)
 \]
@@ -252,6 +275,15 @@ where we've normalised the backward message for convenience even though it's a l
 
 So, instead of sending separate backward messages to each Bernoulli cluster, we publish $\delta_\phi$ and $\prod_i (1-\delta_i)$ along with the daily exposure key. Then, since each phone already knows it's own $\delta_j$ (i.e. the forward message it passed for that contact) they can each calculate their own backward message from the published values. In this way we only need to make a single publication to send backward messages to all contacts on that day.
 
+\subsection{Training the model: The parameter server}
+%================================
+
+``Epidemiological'' messages from a phone to the parameter server will consist of the likelihood function of the parameters for any new test results. If there are many parameters, an approximation could be sent in order to reduce bandwidth requirements; for example, by assuming independence between certain parameter sets. Since the parameter server doesn't need to know the identity of the sender in order to update its belief, the updates can be sent anonymously.
+
+Forward messages from the parameter server to each phone could be achieved by publishing the posterior belief in the parameters. Phones could update their values on a daily basis. In a similar way to other messages, if a user has sent a backward message to the parameter server, the effects of that message can be removed from the published posterior by simply dividing, in order to calculate the correct forward message from the parameter server.
+
+The prior of the parameter server could also be updated centrally in response to new scientific understanding of the dynamics of the disease.
+
 \section{Inference over multiple encounters between the same two people}
 %=======================================================================
 
@@ -263,7 +295,7 @@ where $B(\tau|\iota)$ is the Bernoulli distribution, and, from equation \ref{fir
 \[
 P(\epsilon(t)|\tau_1,\tau_2) = \delta(t-t_1)\tau_1 + \delta(t-t_2)\tau_2(1-\tau_1)
 \]
-where, $t_1$ and $t_2$ are the times of the encounters and, for simplicity, we set $\rho$ to zero and assume no other contacts (although the same argument applies in the presence of other contacts and non-zero $\rho$).
+where, $t_1$ and $t_2$ are the times of the encounters. In order to keep the demonstration simple, we set $\rho$ to zero and assume no other contacts (although the same argument applies in the presence of other contacts and non-zero $\rho$).
 
 Starting with forward inference, the correct marginal for $P(\epsilon(t))$ is
 \[
@@ -273,9 +305,9 @@ However, the belief propagation algorithm will end up with a belief
 \[
 B(\epsilon(t)) = \delta(t-t_1)\overline{\iota} + \delta(t-t_2)\overline{\iota}(1-\overline{\iota}) = \delta(t-t_1)\overline{\iota} + \delta(t-t_2)\left(\overline{\iota}-\overline{\iota}^2\right)
 \]
-So the the belief that the first encounter was a first exposure is correct, but the belief that the second encounter was a first encounter is in error by the variance of $P(\iota)$.
+So the the belief that the first encounter was a first exposure is correct, but the belief that the second encounter was a first exposure is in error by the variance of $P(\iota)$.
 
-To evaluate error in reverse inference, we take the worst case scenario which is that B is certainly infected, and has only been in contact with $A$, so either $\tau_1$ or $\tau_2$ must be the first exposure. This is equivalent to saying $\tau_1 \vee \tau_2 = true$. The correct posterior marginal is
+To give a sense of the size of error in reverse inference, we take the worst case scenario which is that B is certainly infected, and has only been in contact with $A$, so either $\tau_1$ or $\tau_2$ must be the first exposure. This is equivalent to saying $\tau_1 \vee \tau_2 = true$. The correct posterior marginal is
 \[
 P(\iota | \tau_1 \vee \tau_2 = true) = A\left(2\iota - \iota^2\right)P(\iota)
 \]
@@ -295,18 +327,18 @@ B(\delta | \tau_1 \vee \tau_2 = true) = A'(\overline{\iota}(2 - \overline{\iota}
 \frac{(1-\overline{\iota})^2}{\overline{\iota}(2 - \overline{\iota})}\delta^2
 \right)P(\overline{\iota}+\delta)
 \]
-However, since $\overline{\iota}$ and $\delta$ will be small (of the order 0.01\cite{luo2020modes}), the expected error is in the order $\mathcal{O}(\frac{\overline{\iota^2}}{2\overline{\iota}})$.
+However, since $\overline{\iota}$ and $\delta$ will be small (of the order 0.01\cite{luo2020modes}), the expected error is in the order $\mathcal{O}(\frac{\overline{\iota^2}}{2\overline{\iota}})$. Further loops of message passing would introduce higher order terms in $\delta$.
 
-We may wish to neglect these errors, but if not there are a number of things that can be done.
+We may wish to simply neglect these errors, but if not there are a number of things that can be done.
 
 
 \subsection{Identifying repeated encounters}
 
-If the phone receiving a message is able to identify transmission events that involve the same person, they can be bundled into a single cluster and belief propagation will again be exact.
+If the phone receiving a message is able to identify transmission events that involve the same person, the corresponding Bernoulli clusters can be bundled into a single cluster and belief propagation will again be exact.
 
-If the repeated encounters occur on the same day, the phone that receives the message can easily identify repeated encounters since the daily exposure key will match multiple PIDs in its log. However, if the encounters were on different days, the matching is more difficult as they will have different daily exposure keys and, by design, these cannot be tracked to an individual.
+If the repeated encounters occur on the same day, the phone that receives the message can easily identify them since the daily exposure key will match multiple PIDs in its log. However, if the encounters were on different days, the matching is more difficult as they will have different daily exposure keys and, by design, these cannot be tracked to an individual.
 
-Repeated encounters will most often be with members of the household, close friends or work colleagues. Users could optionally match encounters with known contacts by allowing their phones to communicate directly in any convenient way. Suppose person A has published a number of daily exposure keys. For any genuine close contacts with person B, both A and B know the daily exposure key and the PIDs that were exchanged during the encounter. If B's PIDs match multiple published exposure keys, B's phone can choose one, use the exchanged PIDs to encrypt the corresponding daily exposure key and send the encrypted message to A's phone. A's phone can then try to decrypt the message using the PID pairs corresponding to its encounters. If the decrypted message successfully matches A's daily exposure key, a message can be sent back to B confirming that the encounter was between A and B. In order for B's phone to keep the number of PID matches secret, it can send a number of dummy requests to make up the total number of requests to some randomly chosen number. In this way, the only information either phone can gain is which encounters involved the two parties. Since this is not a secret between the two parties in any case, no private information is revealed.
+Repeated encounters will most often be between members of the same household, close friends or work colleagues. Users could optionally match encounters with known contacts by allowing their phones to communicate directly in any convenient way (e.g. Bluetooth). Suppose person A has published a number of daily exposure keys. For any genuine close contacts with person B, both A and B know the daily exposure key and the PIDs that were exchanged during the encounter. If B's PIDs match multiple published exposure keys, B's phone can choose one, use the exchanged PIDs to encrypt the corresponding daily exposure key and send the encrypted message to A's phone. A's phone can then try to decrypt the message using the PID pairs corresponding to its encounters. If the decrypted message successfully matches A's daily exposure key, a message can be sent back to B confirming that the encounter was between A and B. In order for B's phone to keep the number of PID matches secret, it can send a number of dummy requests to make up the total number of requests to some randomly chosen number. In this way, the only information either phone can gain is which encounters involved the two parties. Since this is not a secret between the two parties in any case, no private information is revealed.
 
 In order to match repeated encounters with strangers, the user could be prompted when the probability of two messages being from the same person goes above some threshold. The user could then use information about the times of the contacts, their memory of events and knowledge of their daily behaviour to try to work out whether they were repeated encounters. For example, if the user goes to the same coffee shop every morning, then the pattern of encounters at the same time every morning may allow them to assign them as repeated encounters.
 
@@ -370,17 +402,16 @@ $\bar{c}_a^\leftarrow(\Delta t)$ is the expected cost saving of isolating and co
 
 Notice that calculation of $\bar{c}(t)$ requires calculation of $\bar{c}(t+1)$ so we have a recursion.
 
-To make the recursion tractable, we make a few assumptions. First, since the logging of symptoms can be done with very little cost, we assume that symptoms should be logged every day unconditionally (in practice, this will consist of the logging of the onset of any relevant symptoms, with the assumption of no symptoms otherwise). Secondly, we assume that we take at most one clinical test a day, and that the appropriate clinical test (i.e. PCR, antigen or antibody) can be decided by clinical considerations based on our belief about onset time and whether there have been previous positive tests (i.e. whether we are trying to show that a person has been infected or is safe to release).
+To make the recursion tractable, we make a few assumptions. First, since the logging of symptoms can be done with very little cost, we assume that symptoms should be logged every day unconditionally (in practice, this will consist of the logging of the onset of and recovery from any relevant symptoms, with the assumption of no symptoms otherwise). Secondly, we assume that we take at most one clinical test a day, and that the appropriate clinical test (i.e. PCR, antigen or antibody) can be decided by clinical considerations based on our belief about onset time and whether there have been previous positive tests (i.e. whether we are trying to show that a person has been infected or is safe to release).
 
-With these assumptions, we can easily calculate the recursion 7 days into the future without putting a significant computational load the phone. Since on each day either no test is performed, or a test is performed and returns positive, or a test is performed and returns negative, there are three scenarios to evaluate each day and $3^7 = 2187$ scenarios in total. Beyond the 7 day horizon, we assume that if isolated the user will remain isolated until no danger is posed or if not isolated, the user poses no further danger. Since we don't know what the result of symptom tests will be, we take a Monte-Carlo sample of symptom onset times (say 100 samples) and run each scenario with each sample, giving a total of just over $200,000$ scenarios to run. This is not a large computational load, but can be reduced further by pruning highly unlikely scenarios (such as getting two consecutive negative tests at the peak of viral shedding after positive confirmation) and unreasonable testing schedules (e.g. performing a test around symptom onset if a positive test has already been obtained).
+With these assumptions, we can easily calculate the recursion 7 days into the future without putting a significant computational load on the phone. Since on each day either no test is performed, or a test is performed and returns positive, or a test is performed and returns negative, there are three scenarios to evaluate each day and $3^7 = 2187$ scenarios in total. Beyond the 7 day horizon, we assume that if isolated the user will remain isolated until no danger is posed or if not isolated, the user will remain out of isolation. Since we don't know what the result of symptom tests will be, we take a Monte-Carlo sample of symptom onset times (say 100 samples) and run each scenario with each sample, giving a total of just over $200,000$ scenarios to run. This is not a large computational load, but can be reduced further if desired by pruning highly unlikely scenarios (such as getting two consecutive negative tests at the peak of viral shedding after positive confirmation) and unreasonable testing schedules (e.g. performing a test around symptom onset if a positive test has already been obtained).
 
-\section{Further work}
+\section{Discussion and further work}
 
-Distributed calibration of the parameters of the disease dynamics could be done by allowing phones to anonymously post the rate of change of probability of their test results with each parameter. This data can be posted to a central server which could aggregate the information from many phones and publish updated parameters for phones to periodically download. 
+We have described a privacy-preserving way of doing distributed Bayesian inference on a network of mobile phones in order to inform decisions made by a contact tracing app. The algorithm also allows the disease model on each phone to be updated in response to the data collected during contact tracing.
 
-The cost analysis can also be extended to the whole contact-tracing system in order to optimise the value of the thresholds to minimise expected cost.
+Further work is necessary to ensure that the network can withstand malicious attack, and a full analysis should be made to ensure that there is no way that the content of the messages could be used to identify a person. However, we have shown that Bayesian inference and epidemiological data collection is possible within the context of decentralised contact tracing as described in the Apple/Google specification\cite{applegoogle}.
 
-It may be worthwhile getting exact costs from contacts rather from pre-computed average values. However, this may have a large impact on the amount of information that needs to be passed, and will put requirements on the frequency that published information will need to be checked.
 
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{unsrturl}
