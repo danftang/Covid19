@@ -1,0 +1,62 @@
+\begin{thebibliography}{1}
+
+\bibitem{applegoogle}
+Google~Inc. Apple~Inc.
+\newblock Privacy-preserving contact tracing, 2020.
+\newblock Accessed 6th May, 2020.
+\newblock URL: \url{https://www.apple.com/covid19/contacttracing/}.
+
+\bibitem{dp3t}
+C~Troncoso et~al.
+\newblock Decentralized privacy-preserving proximity tracing, 2020.
+\newblock Accessed 6th May, 2020.
+\newblock URL:
+  \url{https://github.com/DP-3T/documents/blob/master/DP3T%20White%20Paper.pdf}.
+
+\bibitem{pepppt}
+PEPP-PT.
+\newblock Building blocks for pandemic management systems for proximity
+  tracing, 2020.
+\newblock Accessed 6th May, 2020.
+\newblock URL:
+  \url{https://github.com/pepp-pt/pepp-pt-documentation/blob/master/PEPP-PT-building-blocks.pdf}.
+
+\bibitem{fang2020sensitivity}
+Yicheng Fang, Huangqi Zhang, Jicheng Xie, Minjie Lin, Lingjun Ying, Peipei
+  Pang, and Wenbin Ji.
+\newblock Sensitivity of chest ct for covid-19: comparison to rt-pcr.
+\newblock {\em Radiology}, page 200432, 2020.
+
+\bibitem{lavezzo2020suppression}
+Enrico Lavezzo, Elisa Franchin, Constanze Ciavarella, Gina Cuomo-Dannenburg,
+  Luisa Barzon, Claudia Del~Vecchio, Lucia Rossi, Riccardo Manganelli, Arianna
+  Loregian, Nicol{\`o} Navarin, et~al.
+\newblock Suppression of covid-19 outbreak in the municipality of vo, italy.
+\newblock {\em medRxiv}, 2020.
+
+\bibitem{pearl2014probabilistic}
+Judea Pearl.
+\newblock {\em Probabilistic reasoning in intelligent systems: networks of
+  plausible inference}.
+\newblock Elsevier, 2014.
+
+\bibitem{sattler2020risk}
+Felix Sattler, Jackie Ma, Patrick Wagner, David Neumann, Markus Wenzel, Ralf
+  Schäfer, Wojciech Samek, Klaus-Robert Müller, and Thomas Wiegand.
+\newblock Risk estimation of sars-cov-2 transmission from bluetooth low energy
+  measurements, 2020.
+\newblock \href {http://arxiv.org/abs/2004.11841} {\path{arXiv:2004.11841}}.
+
+\bibitem{koller2009probabilistic}
+Daphne Koller and Nir Friedman.
+\newblock {\em Probabilistic graphical models: principles and techniques}.
+\newblock MIT press, 2009.
+
+\bibitem{luo2020modes}
+Lei Luo, Dan Liu, Xin-long Liao, Xian-bo Wu, Qin-long Jing, Jia-zhen Zheng,
+  Fang-hua Liu, Shi-gui Yang, Bi~Bi, Zhi-hao Li, et~al.
+\newblock Modes of contact and risk of transmission in covid-19 among close
+  contacts.
+\newblock {\em medRxiv}, 2020.
+
+\end{thebibliography}

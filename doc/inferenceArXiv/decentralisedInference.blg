@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: decentralisedInference.aux
+The style file: unsrturl.bst
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=20001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: inferenceRefs.bib
+You've used 9 entries,
+            2522 wiz_defined-function locations,
+            605 strings with 6415 characters,
+and the built_in function-call counts, 2853 in all, are:
+= -- 236
+> -- 162
+< -- 1
++ -- 54
+- -- 45
+* -- 112
+:= -- 418
+add.period$ -- 30
+call.type$ -- 9
+change.case$ -- 7
+chr.to.int$ -- 0
+cite$ -- 9
+duplicate$ -- 84
+empty$ -- 296
+format.name$ -- 45
+if$ -- 792
+int.to.chr$ -- 0
+int.to.str$ -- 9
+missing$ -- 7
+newline$ -- 51
+num.names$ -- 9
+pop$ -- 87
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 233
+stack$ -- 0
+substring$ -- 12
+swap$ -- 24
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 10
+width$ -- 10
+write$ -- 99

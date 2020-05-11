@@ -1,0 +1,12 @@
+\BOOKMARK [1][-]{section.1}{Introduction: the need for Bayesian inference}{}% 1
+\BOOKMARK [1][-]{section.2}{Description of the problem}{}% 2
+\BOOKMARK [1][-]{section.3}{Expressing the joint probability over transmission events}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{The disease model}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{The joint probabilities}{section.3}% 5
+\BOOKMARK [1][-]{section.4}{Calculating posterior marginal probabilities of transmission events}{}% 6
+\BOOKMARK [2][-]{subsection.4.1}{Passing of messages}{section.4}% 7
+\BOOKMARK [2][-]{subsection.4.2}{Training the model: The parameter server}{section.4}% 8
+\BOOKMARK [1][-]{section.5}{Inference over multiple encounters between the same two people}{}% 9
+\BOOKMARK [2][-]{subsection.5.1}{Identifying repeated encounters}{section.5}% 10
+\BOOKMARK [1][-]{section.6}{Deciding when to self-isolate, test and release}{}% 11
+\BOOKMARK [1][-]{section.7}{Discussion and further work}{}% 12
