@@ -5,5 +5,5 @@ The code here is a contact tracing model based on the model described in Hellewe
 
 Please see [this whitepaper](/doc/ContactTracingPolicy.pdf) for some model results.
 
-Also, see [this whitepaper](/doc/DecentralisedInference.pdf) for details of a privacy-preserving way of doing Bayesian inference to identify people at-risk of infection given when using mobile-phone contact tracing.
+Also, see [this paper](/doc/DecentralisedInference.pdf) for details of a privacy-preserving way of doing Bayesian inference to identify people at-risk of infection given when using mobile-phone contact tracing.
 
